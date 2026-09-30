@@ -122,7 +122,7 @@
   <b>Real Burger & Assados</b><br>
   WhatsApp: <span id="zapRodape"></span><br>
   Sábados, domingos e feriados, das 18h às 22h<br>
-  Pagamento: débito, crédito ou Pix na maquininha
+  Pagamento: débito, crédito, Pix na maquininha ou dinheiro
 </footer>
 
 <div class="barra" id="barra">
@@ -178,7 +178,9 @@
     </div>
 
     <div class="rotulo" id="rotPag">Pagamento na entrega</div>
-    <select id="cPag"></select>
+    <select id="cPag" onchange="atualizaTroco()"></select>
+    <label class="campo" id="blocoTroco" style="display:none;margin-top:10px"><span>Troco para quanto? (deixe em branco se não precisar)</span><input type="text" id="cTroco" inputmode="decimal" placeholder="Ex.: 50,00" oninput="document.getElementById('avisoTroco').style.display='none'"></label>
+    <p class="aviso" id="avisoTroco">O valor do troco precisa ser maior que o total do pedido.</p>
     <p class="nota">Por segurança, o Pix é feito só na maquininha. Nunca pedimos Pix por mensagem.</p>
 
     <div style="margin-top:16px">
@@ -201,7 +203,7 @@
     <h3 style="font-size:22px;margin-bottom:6px">Pedido enviado!</h3>
     <p class="sub">Seu pedido já está na cozinha.</p>
     <div class="mesa-box" style="margin:16px 0;font-size:18px"><span id="okMesa"></span> · Pedido <span id="okCodigo"></span></div>
-    <p class="sub">O pagamento é feito no caixa ou na mesa, no cartão ou Pix na maquininha.</p>
+    <p class="sub">O pagamento é feito no caixa ou na mesa, no cartão, no Pix na maquininha ou em dinheiro.</p>
     <button class="btn" style="justify-content:center" onclick="fechar('mOk')">Voltar ao cardápio</button>
   </div>
 </div>
@@ -214,7 +216,7 @@ const CONFIG = {
   whatsapp: "5567991903123",          // DDI + DDD + número, só dígitos
   painelURL: "https://script.google.com/macros/s/AKfycbynEIDwnkohmAJuKFgftfutvmrZcnlN6JlwaEYd9yvqBr_VPwtmqsKgUUtIhMttBgc/exec",                      // URL do App da Web (Google Apps Script) do painel de pedidos
   taxaEntrega: null,                  // ex.: 5 para R$ 5,00 | null = "a combinar"
-  pagamentos: ["Cartão de débito", "Cartão de crédito", "Pix (na maquininha)"],  // adicione "Dinheiro" se aceitar
+  pagamentos: ["Cartão de débito", "Cartão de crédito", "Pix (na maquininha)", "Dinheiro"],
   mesas: 5,                           // quantidade de mesas com QR code
   horario: { abre: "18:00", fecha: "22:00", dias: [0,6] }, // 0 = domingo, 6 = sábado
   // Feriados em que a loja abre (formato ano-mês-dia): nacionais, MS e Campo Grande
@@ -376,9 +378,21 @@ function desenhaCarrinho(){
   $("tTotal").textContent = brl(subtotal()+taxa);
 }
 function alteraItem(k,d){ carrinho[k].qtd+=d; if(carrinho[k].qtd<1) carrinho.splice(k,1); atualizaBarra(); desenhaCarrinho(); }
-function setModo(m){ modo=m; $("tEntrega").classList.toggle("sel",m==="entrega"); $("tRetirada").classList.toggle("sel",m==="retirada"); $("blocoEndereco").style.display=m==="entrega"?"block":"none"; desenhaCarrinho(); }
+function setModo(m){ modo=m; setTimeout(atualizaTroco,0); $("tEntrega").classList.toggle("sel",m==="entrega"); $("tRetirada").classList.toggle("sel",m==="retirada"); $("blocoEndereco").style.display=m==="entrega"?"block":"none"; desenhaCarrinho(); }
 function fechar(id){ $(id).classList.remove("aberto"); }
 
+function valorTroco(){ const v=parseFloat(($("cTroco").value||"").replace(/[^\d,.]/g,"").replace(/\./g,"").replace(",",".")); return isNaN(v)?null:v; }
+function totalPedido(){ return subtotal() + (modo==="entrega" && CONFIG.taxaEntrega ? CONFIG.taxaEntrega : 0); }
+function atualizaTroco(){
+  const din = $("cPag").value==="Dinheiro" && modo!=="mesa";
+  $("blocoTroco").style.display = din ? "block" : "none";
+  if(!din){ $("cTroco").value=""; $("avisoTroco").style.display="none"; }
+}
+function textoPagamento(){
+  const pg=$("cPag").value, t=valorTroco();
+  if(pg!=="Dinheiro" || modo==="mesa") return pg;
+  return t ? `Dinheiro (troco para ${brl(t)})` : "Dinheiro (sem troco)";
+}
 function codigoPedido(){ return String(Math.floor(100+Math.random()*900)); }
 
 function montarPedido(nome, rua, bairro, ref){
@@ -387,7 +401,7 @@ function montarPedido(nome, rua, bairro, ref){
     endereco: modo==="entrega" ? `${rua}, ${bairro}${ref?` (ref.: ${ref})`:""}` : "",
     itens: carrinho.map(i=>({ qtd:i.qtd, nome:i.nome, adicionais:i.adicionais.map(a=>a.nome), obs:i.obs })),
     total: subtotal() + (modo==="entrega" && CONFIG.taxaEntrega ? CONFIG.taxaEntrega : 0),
-    pagamento: $("cPag").value
+    pagamento: textoPagamento()
   };
 }
 
@@ -414,6 +428,9 @@ async function enviarPedido(){
   const nome=$("cNome").value.trim(), rua=$("cRua").value.trim(), bairro=$("cBairro").value.trim(), ref=$("cRef").value.trim();
   if(!nome || (modo==="entrega" && (!rua||!bairro))){ $("aviso").style.display="block"; return; }
   $("aviso").style.display="none";
+  const tr=valorTroco();
+  if($("cPag").value==="Dinheiro" && modo!=="mesa" && tr!==null && tr<=totalPedido()){ $("avisoTroco").style.display="block"; return; }
+  $("avisoTroco").style.display="none";
   const ped = montarPedido(nome, rua, bairro, ref);
   const zap = mensagemWhats(ped);
 

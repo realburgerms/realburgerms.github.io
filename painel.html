@@ -186,7 +186,7 @@ function cartao(p){
     <div class="cliente">${esc(p.cliente)}</div>
     ${p.tipo==="entrega"?`<div class="end">📍 ${esc(p.endereco)}</div>`:""}
     <ul class="itens">${itens}</ul>
-    <div class="rodape"><span>${esc(p.pagamento)}</span><b style="color:#fff">${brl(p.total)}</b></div>
+    <div class="rodape"><span${/troco para/i.test(p.pagamento)?' style="color:#ffd27a;font-weight:700"':""}>${esc(p.pagamento)}</span><b style="color:#fff">${brl(p.total)}</b></div>
     <div class="acoes">
       ${ANTERIOR[p.status]?`<button class="voltar" onclick="mudar('${p.id}','${ANTERIOR[p.status]}')">‹ voltar</button>`:""}
       <button class="avancar" onclick="mudar('${p.id}','${PROXIMO[p.status]}')">${TEXTO_BOTAO[p.status]}</button>
