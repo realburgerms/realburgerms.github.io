@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real Burger & Assados | Cardápio e Delivery</title>
+<meta name="description" content="Lanches artesanais feitos com os melhores ingredientes. Peça pelo WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Paleta tirada da logo da Real Burger */
+    --bg:#061433; --card:#0a1f4e; --card2:#10306e; --line:#1d4185;
+    --txt:#ffffff; --muted:#a9c3e8; --red:#1a67bf; --red2:#1557a3; --yellow:#dcebfb; --rope:#3674c2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Poppins,system-ui,sans-serif;background:var(--bg);color:var(--txt);padding-bottom:90px}
+  button{font-family:inherit;cursor:pointer;border:none}
+  .wrap{max-width:960px;margin:0 auto;padding:0 16px}
+
+  /* Topo */
+  header{background:radial-gradient(ellipse at top,#1a67bf 0%,#0a1f4e 55%,var(--bg) 100%);border-bottom:4px solid var(--rope);padding:24px 0 22px;text-align:center}
+  .brand{display:flex;justify-content:center}
+  .brand img{width:210px;max-width:62vw;height:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45))}
+  .slogan{color:var(--muted);margin-top:14px;font-size:15px}
+  .status{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;background:var(--card2);padding:5px 12px;border-radius:20px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#2ecc71}
+  .status.fechado .dot{background:#888}
+
+  /* Abas */
+  nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;gap:8px;overflow-x:auto;padding-top:12px;padding-bottom:12px;scrollbar-width:none}
+  nav a{white-space:nowrap;text-decoration:none;color:var(--txt);background:var(--card);padding:8px 16px;border-radius:20px;font-size:14px;font-weight:500;border:1px solid var(--line)}
+  nav a.ativo{background:var(--red);border-color:var(--red)}
+
+  /* Cardápio */
+  section{padding-top:26px}
+  h2{font-family:'Alfa Slab One',serif;font-weight:400;font-size:26px;letter-spacing:.5px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+  h2::after{content:'';flex:1;height:2px;background:linear-gradient(90deg,var(--rope),transparent)}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:700px){.grid{grid-template-columns:1fr 1fr}}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;gap:14px;align-items:center;cursor:pointer;transition:border-color .15s}
+  .item:hover{border-color:var(--red)}
+  .thumb{width:74px;height:74px;border-radius:12px;background:var(--card2);flex-shrink:0;display:grid;place-items:center;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .thumb svg{width:44px;height:44px}
+  .info{flex:1;min-width:0}
+  .info h3{font-size:16px;font-weight:600}
+  .info p{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4}
+  .preco{color:var(--yellow);font-weight:700;margin-top:6px}
+  .add{width:38px;height:38px;border-radius:50%;background:var(--red);color:#fff;font-size:24px;line-height:1;flex-shrink:0}
+  .add:hover{background:var(--red2)}
+
+  footer{margin-top:40px;padding:24px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center;line-height:1.7}
+
+  /* Barra do carrinho */
+  .barra{position:fixed;left:0;right:0;bottom:0;padding:12px 16px;background:linear-gradient(transparent,var(--bg) 30%);z-index:10;display:none}
+  .barra button{width:100%;max-width:928px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;background:var(--red);color:#fff;padding:15px 20px;border-radius:14px;font-size:16px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+  .qtd-badge{background:#fff;color:var(--red2);border-radius:20px;padding:1px 9px;font-size:14px;margin-right:8px}
+
+  /* Modais */
+  .fundo{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:20;display:none;align-items:flex-end;justify-content:center}
+  .fundo.aberto{display:flex}
+  @media(min-width:700px){.fundo{align-items:center}}
+  .modal{background:var(--card);width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:22px 18px}
+  @media(min-width:700px){.modal{border-radius:18px}}
+  .modal-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+  .modal h3{font-size:20px}
+  .fechar{background:var(--card2);color:var(--txt);width:34px;height:34px;border-radius:50%;font-size:18px;flex-shrink:0}
+  .sub{font-size:14px;color:var(--muted);line-height:1.5}
+  .rotulo{font-weight:600;font-size:14px;margin:18px 0 8px;color:var(--yellow)}
+  .opcao{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;background:var(--card2);border-radius:10px;margin-bottom:6px;font-size:14px}
+  .opcao label{display:flex;align-items:center;gap:10px;cursor:pointer;flex:1}
+  .opcao input{width:18px;height:18px;accent-color:var(--red)}
+  textarea,input[type=text],input[type=tel],select{width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:15px}
+  textarea{resize:vertical;min-height:60px}
+  .campo{margin-bottom:10px}
+  .campo span{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .contador{display:flex;align-items:center;gap:12px}
+  .contador button{width:34px;height:34px;border-radius:50%;background:var(--card2);color:var(--txt);font-size:18px;border:1px solid var(--line)}
+  .contador b{min-width:18px;text-align:center}
+  .btn{width:100%;background:var(--red);color:#fff;padding:15px;border-radius:12px;font-size:16px;font-weight:600;margin-top:18px;display:flex;justify-content:space-between;align-items:center}
+  .btn.zap{background:#25d366;color:#0b2e17;justify-content:center;gap:10px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .linha-car{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .linha-car .nome{font-weight:600;font-size:15px}
+  .linha-car .det{font-size:12px;color:var(--muted);margin-top:2px}
+  .linha-car .val{color:var(--yellow);font-weight:600;font-size:14px;margin-top:4px}
+  .total{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:6px}
+  .total.grande{font-size:18px;color:var(--txt);font-weight:700;margin-top:10px}
+  .toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .toggle button{background:var(--card2);color:var(--txt);padding:11px;border-radius:10px;border:1px solid var(--line);font-size:14px;font-weight:500}
+  .toggle button.sel{background:var(--red);border-color:var(--red)}
+  .faixa-mesa{background:var(--yellow);color:#061433;text-align:center;font-weight:600;padding:10px 16px;font-size:15px;display:none}
+  .nota{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+  .mesa-box{background:var(--card2);border:1px solid var(--yellow);border-radius:10px;padding:12px;font-weight:600;text-align:center}
+  .aviso{font-size:12px;color:#ff8a8a;margin-top:8px;display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <h1><img src="logo.png" alt="Real Burger & Assados"></h1>
+    </div>
+    <p class="slogan">Sabor de verdade em cada mordida. Lanches artesanais feitos com os melhores ingredientes.</p>
+    <div class="status" id="status"><span class="dot"></span><span id="statusTxt"></span></div>
+  </div>
+</header>
+
+<div class="faixa-mesa" id="faixaMesa"></div>
+<nav><div class="wrap" id="abas"></div></nav>
+
+<main class="wrap" id="cardapio"></main>
+
+<footer class="wrap">
+  <b>Real Burger & Assados</b><br>
+  WhatsApp: <span id="zapRodape"></span><br>
+  Pagamento: débito, crédito ou Pix na maquininha
+</footer>
+
+<div class="barra" id="barra">
+  <button onclick="abrirCarrinho()">
+    <span><span class="qtd-badge" id="barraQtd">0</span>Ver pedido</span>
+    <span id="barraTotal">R$ 0,00</span>
+  </button>
+</div>
+
+<!-- Modal do produto -->
+<div class="fundo" id="mProduto" onclick="if(event.target===this)fechar('mProduto')">
+  <div class="modal">
+    <div class="modal-topo">
+      <div><h3 id="pNome"></h3><p class="sub" id="pDesc"></p></div>
+      <button class="fechar" onclick="fechar('mProduto')" aria-label="Fechar">✕</button>
+    </div>
+    <div id="pAdicionais"></div>
+    <div class="rotulo">Alguma observação?</div>
+    <textarea id="pObs" placeholder="Ex.: sem cebola, ponto da carne..."></textarea>
+    <div class="rotulo">Quantidade</div>
+    <div class="contador">
+      <button onclick="mudaQtd(-1)">−</button><b id="pQtd">1</b><button onclick="mudaQtd(1)">+</button>
+    </div>
+    <button class="btn" onclick="adicionar()"><span>Adicionar</span><span id="pTotal"></span></button>
+  </div>
+</div>
+
+<!-- Modal do carrinho / finalização -->
+<div class="fundo" id="mCarrinho" onclick="if(event.target===this)fechar('mCarrinho')">
+  <div class="modal">
+    <div class="modal-topo">
+      <h3>Seu pedido</h3>
+      <button class="fechar" onclick="fechar('mCarrinho')" aria-label="Fechar">✕</button>
+    </div>
+    <div id="listaCarrinho"></div>
+
+    <div id="blocoMesa" style="display:none"><div class="rotulo">Local</div><div class="mesa-box" id="mesaBox"></div></div>
+    <div id="blocoModo">
+    <div class="rotulo">Como você quer receber?</div>
+    <div class="toggle">
+      <button id="tEntrega" class="sel" onclick="setModo('entrega')">Entrega</button>
+      <button id="tRetirada" onclick="setModo('retirada')">Retirar no local</button>
+    </div>
+    </div>
+
+    <div class="rotulo">Seus dados</div>
+    <label class="campo"><span>Nome</span><input type="text" id="cNome" autocomplete="name"></label>
+    <div id="blocoEndereco">
+      <label class="campo"><span>Endereço (rua e número)</span><input type="text" id="cRua" autocomplete="street-address"></label>
+      <label class="campo"><span>Bairro</span><input type="text" id="cBairro"></label>
+      <label class="campo"><span>Ponto de referência (opcional)</span><input type="text" id="cRef"></label>
+    </div>
+
+    <div class="rotulo" id="rotPag">Pagamento na entrega</div>
+    <select id="cPag"></select>
+    <p class="nota">Por segurança, o Pix é feito só na maquininha. Nunca pedimos Pix por mensagem.</p>
+
+    <div style="margin-top:16px">
+      <div class="total"><span>Subtotal</span><span id="tSub"></span></div>
+      <div class="total" id="linhaTaxa"><span>Taxa de entrega</span><span id="tTaxa"></span></div>
+      <div class="total grande"><span>Total</span><span id="tTotal"></span></div>
+    </div>
+
+    <p class="aviso" id="aviso">Preencha os dados obrigatórios para continuar.</p>
+    <button class="btn zap" onclick="enviarPedido()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.2z"/></svg>
+      Enviar pedido pelo WhatsApp
+    </button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÃO: edite aqui para mudar preços, itens e dados
+   ========================================================= */
+const CONFIG = {
+  whatsapp: "5567991903123",          // DDI + DDD + número, só dígitos
+  taxaEntrega: null,                  // ex.: 5 para R$ 5,00 | null = "a combinar"
+  pagamentos: ["Cartão de débito", "Cartão de crédito", "Pix (na maquininha)"],  // adicione "Dinheiro" se aceitar
+  mesas: 5,                           // quantidade de mesas com QR code
+  horario: { abre: "18:00", fecha: "23:30", dias: [0,1,2,3,4,5,6] } // 0 = domingo
+};
+
+// Para colocar foto num produto, adicione: foto: "fotos/real-bacon.jpg"
+const CARDAPIO = [
+  { cat: "Lanches", icone: "burger", itens: [
+    { id:"hamb",  nome:"Real Hambúrguer", desc:"Pão, hambúrguer e queijo", preco:15 },
+    { id:"sal",   nome:"Real Salada",     desc:"Pão, hambúrguer, queijo, alface, tomate e maionese da casa", preco:18 },
+    { id:"duplo", nome:"Real Duplo",      desc:"Pão, 2 hambúrgueres, queijo, bacon e maionese da casa", preco:24 },
+    { id:"bacon", nome:"Real Bacon",      desc:"Pão, hambúrguer, queijo, bacon, molho barbecue, cebola roxa, agrião, tomate e maionese da casa", preco:25 },
+    { id:"calif", nome:"Real Califórnia", desc:"Pão, hambúrguer, queijo, bacon, geleia de abacaxi, cebola roxa, agrião e maionese da casa", preco:29 },
+  ]},
+  { cat: "Porções", icone: "batata", itens: [
+    { id:"bat150", nome:"Batata frita 150 g", desc:"", preco:8 },
+    { id:"bat300", nome:"Batata frita 300 g", desc:"", preco:16 },
+    { id:"batbc",  nome:"Batata frita com bacon e cheddar 300 g", desc:"", preco:24 },
+  ]},
+  { cat: "Bebidas", icone: "bebida", itens: [
+    { id:"coca",  nome:"Coca-Cola",          desc:"", preco:5 },
+    { id:"cocaz", nome:"Coca-Cola Zero",     desc:"", preco:5 },
+    { id:"guar",  nome:"Guaraná Antarctica", desc:"", preco:5 },
+    { id:"hein",  nome:"Heineken",           desc:"", preco:8.5 },
+    { id:"agua",  nome:"Água sem gás",       desc:"", preco:3.5 },
+    { id:"aguag", nome:"Água com gás",       desc:"", preco:3.5 },
+  ]},
+];
+
+// Adicionais aparecem só nos lanches
+const ADICIONAIS = [
+  { nome:"Ovo", preco:3 }, { nome:"Hambúrguer", preco:6 },
+  { nome:"Queijo", preco:3 }, { nome:"Salada", preco:6 },
+];
+
+/* ===================== fim da configuração ===================== */
+
+const ICONES = {
+  burger:`<svg viewBox="0 0 64 64"><path d="M10 28c0-11 10-18 22-18s22 7 22 18z" fill="#fff"/><rect x="8" y="31" width="48" height="6" rx="3" fill="#dcebfb"/><rect x="10" y="37" width="44" height="7" rx="3" fill="#3674c2"/><path d="M10 47h44v3a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6z" fill="#fff"/></svg>`,
+  batata:`<svg viewBox="0 0 64 64"><g fill="#dcebfb"><rect x="18" y="8" width="6" height="30" rx="2"/><rect x="27" y="5" width="6" height="32" rx="2"/><rect x="36" y="8" width="6" height="30" rx="2"/><rect x="44" y="12" width="5" height="26" rx="2"/></g><path d="M14 28h36l-4 30H18z" fill="#1a67bf"/></svg>`,
+  bebida:`<svg viewBox="0 0 64 64"><rect x="22" y="12" width="20" height="44" rx="5" fill="#1a67bf"/><rect x="24" y="8" width="16" height="6" rx="2" fill="#a9c3e8"/><rect x="22" y="26" width="20" height="12" fill="#fff"/></svg>`
+};
+
+const brl = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const $ = id => document.getElementById(id);
+let carrinho = [];
+let atual = null, qtd = 1, modo = "entrega";
+const MESA = (()=>{ const n=parseInt(new URLSearchParams(location.search).get("mesa")); return n>=1 && n<=CONFIG.mesas ? n : null; })();
+
+function montar(){
+  $("zapRodape").textContent = CONFIG.whatsapp.replace(/^55(\d\d)(\d{5})(\d{4})$/,"($1) $2-$3");
+  $("abas").innerHTML = CARDAPIO.map((c,i)=>`<a href="#cat${i}" class="${i?'':'ativo'}">${c.cat}</a>`).join("");
+  $("cardapio").innerHTML = CARDAPIO.map((c,i)=>`
+    <section id="cat${i}"><h2>${c.cat}</h2><div class="grid">
+      ${c.itens.map(it=>`
+        <div class="item" onclick="abrirProduto('${it.id}')">
+          <div class="thumb">${it.foto?`<img src="${it.foto}" alt="${it.nome}">`:ICONES[c.icone]}</div>
+          <div class="info"><h3>${it.nome}</h3>${it.desc?`<p>${it.desc}</p>`:""}<div class="preco">${brl(it.preco)}</div></div>
+          <button class="add" aria-label="Adicionar">+</button>
+        </div>`).join("")}
+    </div></section>`).join("");
+  $("cPag").innerHTML = CONFIG.pagamentos.map(p=>`<option>${p}</option>`).join("");
+  statusLoja();
+  if(MESA){
+    modo = "mesa";
+    $("faixaMesa").textContent = `Você está na Mesa ${MESA}. Faça seu pedido por aqui!`;
+    $("faixaMesa").style.display = "block";
+    $("blocoMesa").style.display = "block"; $("mesaBox").textContent = `Mesa ${MESA}`;
+    $("blocoModo").style.display = "none"; $("blocoEndereco").style.display = "none";
+    $("rotPag").textContent = "Pagamento (no caixa ou na mesa)";
+  }
+  // destaca aba conforme rolagem
+  const secs=[...document.querySelectorAll("section")], links=[...document.querySelectorAll("nav a")];
+  addEventListener("scroll",()=>{let k=0;secs.forEach((s,i)=>{if(s.getBoundingClientRect().top<120)k=i});links.forEach((l,i)=>l.classList.toggle("ativo",i===k))});
+}
+
+function statusLoja(){
+  const agora=new Date(), m=agora.getHours()*60+agora.getMinutes();
+  const [ah,am]=CONFIG.horario.abre.split(":").map(Number), [fh,fm]=CONFIG.horario.fecha.split(":").map(Number);
+  const aberto = CONFIG.horario.dias.includes(agora.getDay()) && m>=ah*60+am && m<=fh*60+fm;
+  $("status").classList.toggle("fechado",!aberto);
+  $("statusTxt").textContent = aberto ? `Aberto agora · até ${CONFIG.horario.fecha}` : `Fechado · abrimos às ${CONFIG.horario.abre}`;
+}
+
+function acharItem(id){ for(const c of CARDAPIO){const it=c.itens.find(x=>x.id===id); if(it) return {...it, cat:c.cat}; } }
+
+function abrirProduto(id){
+  atual = acharItem(id); qtd = 1;
+  $("pNome").textContent = atual.nome;
+  $("pDesc").textContent = atual.desc;
+  $("pObs").value = "";
+  $("pAdicionais").innerHTML = atual.cat==="Lanches" ? `<div class="rotulo">Adicionais</div>` +
+    ADICIONAIS.map((a,i)=>`<div class="opcao"><label><input type="checkbox" value="${i}" onchange="atualizaTotalProduto()">${a.nome}</label><span>+ ${brl(a.preco)}</span></div>`).join("") : "";
+  atualizaTotalProduto();
+  $("mProduto").classList.add("aberto");
+}
+function adicionaisMarcados(){ return [...document.querySelectorAll("#pAdicionais input:checked")].map(x=>ADICIONAIS[x.value]); }
+function atualizaTotalProduto(){
+  const unit = atual.preco + adicionaisMarcados().reduce((s,a)=>s+a.preco,0);
+  $("pQtd").textContent = qtd; $("pTotal").textContent = brl(unit*qtd);
+}
+function mudaQtd(d){ qtd=Math.max(1,qtd+d); atualizaTotalProduto(); }
+
+function adicionar(){
+  const ads = adicionaisMarcados();
+  carrinho.push({ nome:atual.nome, adicionais:ads, obs:$("pObs").value.trim(), qtd,
+    unit: atual.preco + ads.reduce((s,a)=>s+a.preco,0) });
+  fechar("mProduto"); atualizaBarra();
+}
+
+function subtotal(){ return carrinho.reduce((s,i)=>s+i.unit*i.qtd,0); }
+function atualizaBarra(){
+  const n = carrinho.reduce((s,i)=>s+i.qtd,0);
+  $("barra").style.display = n ? "block" : "none";
+  $("barraQtd").textContent = n; $("barraTotal").textContent = brl(subtotal());
+}
+
+function abrirCarrinho(){ desenhaCarrinho(); $("mCarrinho").classList.add("aberto"); }
+function desenhaCarrinho(){
+  if(!carrinho.length){ fechar("mCarrinho"); return; }
+  $("listaCarrinho").innerHTML = carrinho.map((i,k)=>`
+    <div class="linha-car"><div style="flex:1">
+      <div class="nome">${i.qtd}x ${i.nome}</div>
+      ${i.adicionais.length?`<div class="det">Adicionais: ${i.adicionais.map(a=>a.nome).join(", ")}</div>`:""}
+      ${i.obs?`<div class="det">Obs.: ${i.obs.replace(/</g,"&lt;")}</div>`:""}
+      <div class="val">${brl(i.unit*i.qtd)}</div></div>
+      <div class="contador"><button onclick="alteraItem(${k},-1)">−</button><b>${i.qtd}</b><button onclick="alteraItem(${k},1)">+</button></div>
+    </div>`).join("");
+  const taxa = modo==="entrega" && CONFIG.taxaEntrega ? CONFIG.taxaEntrega : 0;
+  $("linhaTaxa").style.display = modo==="entrega" ? "flex" : "none";
+  if(modo!=="mesa") $("rotPag").textContent = modo==="entrega" ? "Pagamento na entrega" : "Pagamento na retirada";
+  $("tTaxa").textContent = CONFIG.taxaEntrega==null ? "a combinar" : brl(CONFIG.taxaEntrega);
+  $("tSub").textContent = brl(subtotal());
+  $("tTotal").textContent = brl(subtotal()+taxa);
+}
+function alteraItem(k,d){ carrinho[k].qtd+=d; if(carrinho[k].qtd<1) carrinho.splice(k,1); atualizaBarra(); desenhaCarrinho(); }
+function setModo(m){ modo=m; $("tEntrega").classList.toggle("sel",m==="entrega"); $("tRetirada").classList.toggle("sel",m==="retirada"); $("blocoEndereco").style.display=m==="entrega"?"block":"none"; desenhaCarrinho(); }
+function fechar(id){ $(id).classList.remove("aberto"); }
+
+function enviarPedido(){
+  const nome=$("cNome").value.trim(), rua=$("cRua").value.trim(), bairro=$("cBairro").value.trim(), ref=$("cRef").value.trim();
+  if(!nome || (modo==="entrega" && (!rua||!bairro))){ $("aviso").style.display="block"; return; }
+  $("aviso").style.display="none";
+  const taxa = modo==="entrega" && CONFIG.taxaEntrega ? CONFIG.taxaEntrega : 0;
+  let t = modo==="mesa" ? `*PEDIDO NA MESA ${MESA}: REAL BURGER*\n\n` : `*NOVO PEDIDO: REAL BURGER*\n\n`;
+  carrinho.forEach(i=>{
+    t += `*${i.qtd}x ${i.nome}* (${brl(i.unit*i.qtd)})\n`;
+    if(i.adicionais.length) t += `   + ${i.adicionais.map(a=>a.nome).join(", ")}\n`;
+    if(i.obs) t += `   Obs.: ${i.obs}\n`;
+  });
+  t += `\nSubtotal: ${brl(subtotal())}\n`;
+  if(modo==="entrega") t += `Taxa de entrega: ${CONFIG.taxaEntrega==null?"a combinar":brl(CONFIG.taxaEntrega)}\n`;
+  t += `*Total: ${brl(subtotal()+taxa)}*\n\n`;
+  t += `*Cliente:* ${nome}\n`;
+  t += modo==="mesa" ? `*Consumo no local: Mesa ${MESA}*\n` : modo==="entrega" ? `*Entrega:* ${rua}, ${bairro}${ref?` (ref.: ${ref})`:""}\n` : `*Retirada no local*\n`;
+  t += `*Pagamento:* ${$("cPag").value}`;
+  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(t)}`,"_blank");
+}
+
+montar();
+</script>
+</body>
+</html>
