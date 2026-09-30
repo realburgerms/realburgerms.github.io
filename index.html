@@ -205,11 +205,13 @@ const CONFIG = {
   pagamentos: ["Cartão de débito", "Cartão de crédito", "Pix (na maquininha)"],  // adicione "Dinheiro" se aceitar
   mesas: 5,                           // quantidade de mesas com QR code
   horario: { abre: "18:00", fecha: "22:00", dias: [0,6] }, // 0 = domingo, 6 = sábado
-  // Feriados em que a loja abre (formato ano-mês-dia). Acrescente os feriados da cidade.
+  // Feriados em que a loja abre (formato ano-mês-dia): nacionais, MS e Campo Grande
   feriados: [
     "2026-10-12","2026-11-02","2026-11-15","2026-11-20","2026-12-25",
-    "2027-01-01","2027-03-26","2027-04-21","2027-05-01","2027-09-07",
-    "2027-10-11","2027-10-12","2027-11-02","2027-11-15","2027-11-20","2027-12-25"
+    "2027-01-01","2027-02-08","2027-02-09","2027-03-26","2027-04-21","2027-05-01",
+    "2027-05-27","2027-06-13","2027-08-26","2027-09-07","2027-10-11","2027-10-12",
+    "2027-11-02","2027-11-15","2027-11-20","2027-12-25"
+    // inclui Carnaval, Corpus Christi, MS (11/10) e Campo Grande (13/06 Santo Antônio, 26/08 aniversário)
   ]
 };
 
