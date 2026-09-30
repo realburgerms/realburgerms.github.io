@@ -95,6 +95,8 @@
   .faixa-mesa{background:var(--yellow);color:#061433;text-align:center;font-weight:600;padding:10px 16px;font-size:15px;display:none}
   .nota{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
   .mesa-box{background:var(--card2);border:1px solid var(--yellow);border-radius:10px;padding:12px;font-weight:600;text-align:center}
+  .dias{font-size:13px;color:#fff;margin-top:8px;font-weight:500}
+  .fechado-aviso{display:none;margin-bottom:6px;background:#10306e;border:1px solid var(--rope);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;color:var(--yellow)}
   .aviso{font-size:12px;color:#ff8a8a;margin-top:8px;display:none}
 </style>
 </head>
@@ -106,6 +108,7 @@
       <h1><img src="logo.png" alt="Real Burger & Assados"></h1>
     </div>
     <p class="slogan">Sabor de verdade em cada mordida. Lanches artesanais feitos com os melhores ingredientes.</p>
+    <p class="dias">Atendimento: sábados, domingos e feriados, das 18h às 22h</p>
     <div class="status" id="status"><span class="dot"></span><span id="statusTxt"></span></div>
   </div>
 </header>
@@ -118,6 +121,7 @@
 <footer class="wrap">
   <b>Real Burger & Assados</b><br>
   WhatsApp: <span id="zapRodape"></span><br>
+  Sábados, domingos e feriados, das 18h às 22h<br>
   Pagamento: débito, crédito ou Pix na maquininha
 </footer>
 
@@ -153,6 +157,7 @@
       <h3>Seu pedido</h3>
       <button class="fechar" onclick="fechar('mCarrinho')" aria-label="Fechar">✕</button>
     </div>
+    <p class="fechado-aviso" id="avisoFechado">Estamos fechados agora. Você pode enviar o pedido, e ele será respondido no próximo horário de atendimento: sábados, domingos e feriados, das 18h às 22h.</p>
     <div id="listaCarrinho"></div>
 
     <div id="blocoMesa" style="display:none"><div class="rotulo">Local</div><div class="mesa-box" id="mesaBox"></div></div>
@@ -199,7 +204,13 @@ const CONFIG = {
   taxaEntrega: null,                  // ex.: 5 para R$ 5,00 | null = "a combinar"
   pagamentos: ["Cartão de débito", "Cartão de crédito", "Pix (na maquininha)"],  // adicione "Dinheiro" se aceitar
   mesas: 5,                           // quantidade de mesas com QR code
-  horario: { abre: "18:00", fecha: "22:00", dias: [0,1,2,3,4,5,6] } // 0 = domingo
+  horario: { abre: "18:00", fecha: "22:00", dias: [0,6] }, // 0 = domingo, 6 = sábado
+  // Feriados em que a loja abre (formato ano-mês-dia). Acrescente os feriados da cidade.
+  feriados: [
+    "2026-10-12","2026-11-02","2026-11-15","2026-11-20","2026-12-25",
+    "2027-01-01","2027-03-26","2027-04-21","2027-05-01","2027-09-07",
+    "2027-10-11","2027-10-12","2027-11-02","2027-11-15","2027-11-20","2027-12-25"
+  ]
 };
 
 // Para colocar foto num produto, adicione: foto: "fotos/real-bacon.jpg"
@@ -273,12 +284,29 @@ function montar(){
   addEventListener("scroll",()=>{let k=0;secs.forEach((s,i)=>{if(s.getBoundingClientRect().top<120)k=i});links.forEach((l,i)=>l.classList.toggle("ativo",i===k))});
 }
 
+function diaAberto(d){
+  const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  return CONFIG.horario.dias.includes(d.getDay()) || CONFIG.feriados.includes(iso);
+}
+let lojaAberta = true;
 function statusLoja(){
   const agora=new Date(), m=agora.getHours()*60+agora.getMinutes();
   const [ah,am]=CONFIG.horario.abre.split(":").map(Number), [fh,fm]=CONFIG.horario.fecha.split(":").map(Number);
-  const aberto = CONFIG.horario.dias.includes(agora.getDay()) && m>=ah*60+am && m<=fh*60+fm;
-  $("status").classList.toggle("fechado",!aberto);
-  $("statusTxt").textContent = aberto ? `Aberto agora · até ${CONFIG.horario.fecha}` : `Fechado · abrimos às ${CONFIG.horario.abre}`;
+  lojaAberta = diaAberto(agora) && m>=ah*60+am && m<=fh*60+fm;
+  $("status").classList.toggle("fechado",!lojaAberta);
+  if(lojaAberta){ $("statusTxt").textContent = `Aberto agora · até ${CONFIG.horario.fecha}`; return; }
+  // procura o próximo dia de atendimento
+  const nomes=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+  let quando="";
+  for(let i=0;i<30;i++){
+    const d=new Date(agora); d.setDate(d.getDate()+i);
+    if(!diaAberto(d)) continue;
+    if(i===0 && m>fh*60+fm) continue;
+    const feriado = !CONFIG.horario.dias.includes(d.getDay());
+    quando = i===0 ? "hoje" : i===1 ? "amanhã" : (feriado ? `${nomes[d.getDay()]} (feriado)` : nomes[d.getDay()]);
+    break;
+  }
+  $("statusTxt").textContent = `Fechado · abrimos ${quando} às ${CONFIG.horario.abre}`;
 }
 
 function acharItem(id){ for(const c of CARDAPIO){const it=c.itens.find(x=>x.id===id); if(it) return {...it, cat:c.cat}; } }
@@ -314,7 +342,7 @@ function atualizaBarra(){
   $("barraQtd").textContent = n; $("barraTotal").textContent = brl(subtotal());
 }
 
-function abrirCarrinho(){ desenhaCarrinho(); $("mCarrinho").classList.add("aberto"); }
+function abrirCarrinho(){ statusLoja(); $("avisoFechado").style.display = lojaAberta ? "none" : "block"; desenhaCarrinho(); $("mCarrinho").classList.add("aberto"); }
 function desenhaCarrinho(){
   if(!carrinho.length){ fechar("mCarrinho"); return; }
   $("listaCarrinho").innerHTML = carrinho.map((i,k)=>`
