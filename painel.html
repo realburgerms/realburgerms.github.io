@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel de Pedidos | Real Burger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#061433; --col:#0a1f4e; --card:#10306e; --line:#1d4185; --txt:#fff; --muted:#a9c3e8;
+    --azul:#1a67bf; --corda:#3674c2; --claro:#dcebfb;
+    --mesa:#3b8cf0; --entrega:#f59e0b; --retirada:#22c55e; --alerta:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Poppins,system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+  button{font-family:inherit;cursor:pointer;border:none}
+
+  /* Login */
+  #login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+  #login img{width:170px}
+  #login h1{font-family:'Alfa Slab One',serif;font-weight:400;font-size:24px}
+  #login input{font-size:22px;text-align:center;letter-spacing:6px;width:200px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:#fff}
+  #login button{background:var(--azul);color:#fff;font-size:17px;font-weight:600;padding:14px 30px;border-radius:12px}
+  #loginErro{color:#ff9a9a;font-size:14px;min-height:20px}
+
+  /* Topo */
+  header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--col);border-bottom:3px solid var(--corda);flex-wrap:wrap}
+  header img{width:48px}
+  header h1{font-family:'Alfa Slab One',serif;font-weight:400;font-size:20px;flex:1;min-width:150px}
+  .filtros{display:flex;gap:6px;flex-wrap:wrap}
+  .filtros button{background:var(--card);color:#fff;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--line)}
+  .filtros button.sel{background:var(--azul);border-color:var(--azul)}
+  .topo-dir{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+  #som{background:var(--card);color:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px}
+  #conexao{width:10px;height:10px;border-radius:50%;background:var(--retirada);display:inline-block}
+  #conexao.off{background:var(--alerta)}
+  #relogio{font-weight:600;color:#fff;font-size:15px}
+
+  /* Colunas */
+  main{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px;align-items:start}
+  @media(max-width:820px){main{grid-template-columns:1fr}}
+  .coluna{background:var(--col);border-radius:14px;padding:10px;min-height:200px}
+  .coluna h2{font-size:15px;font-weight:700;display:flex;justify-content:space-between;align-items:center;padding:4px 6px 10px;text-transform:uppercase;letter-spacing:.5px}
+  .coluna h2 span{background:var(--card);border-radius:20px;padding:2px 10px;font-size:13px}
+  .vazio{color:var(--muted);font-size:13px;text-align:center;padding:24px 8px}
+
+  /* Cartão */
+  .card{background:var(--card);border-radius:12px;padding:12px;margin-bottom:10px;border-left:6px solid var(--mesa)}
+  .card.entrega{border-left-color:var(--entrega)} .card.retirada{border-left-color:var(--retirada)}
+  .card.novo-pisca{animation:pisca 1s ease-in-out 6}
+  @keyframes pisca{50%{box-shadow:0 0 0 4px var(--claro)}}
+  .c-topo{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .codigo{font-size:22px;font-weight:700}
+  .tipo{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;background:var(--mesa);color:#061433;text-transform:uppercase}
+  .entrega .tipo{background:var(--entrega)} .retirada .tipo{background:var(--retirada)}
+  .tempo{font-size:13px;color:var(--muted);margin-top:2px}
+  .tempo.atencao{color:var(--entrega);font-weight:600} .tempo.atrasado{color:var(--alerta);font-weight:700}
+  .cliente{font-size:14px;margin-top:6px;font-weight:600}
+  .end{font-size:13px;color:var(--claro);margin-top:2px}
+  ul.itens{list-style:none;margin:8px 0;border-top:1px solid var(--line);padding-top:8px}
+  ul.itens li{font-size:15px;margin-bottom:5px}
+  ul.itens li b{font-size:16px}
+  .det{display:block;font-size:13px;color:var(--claro);padding-left:14px}
+  .obs{display:block;font-size:13px;color:#ffd27a;padding-left:14px;font-weight:600}
+  .rodape{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+  .acoes{display:flex;gap:6px;margin-top:10px}
+  .acoes .avancar{flex:1;background:var(--azul);color:#fff;font-weight:700;font-size:15px;padding:12px;border-radius:10px}
+  .acoes .voltar,.acoes .cancelar{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:13px}
+
+  /* Entregues */
+  details{margin:0 12px 20px;background:var(--col);border-radius:14px;padding:12px 16px}
+  summary{cursor:pointer;font-weight:600;color:var(--muted)}
+  .linha-ent{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .linha-ent button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:12px}
+  #aviso-config{background:var(--entrega);color:#061433;padding:10px 16px;font-weight:600;font-size:14px;display:none}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <img src="logo.png" alt="Real Burger">
+  <h1>Painel de Pedidos</h1>
+  <input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">
+  <button onclick="entrar()">Abrir painel</button>
+  <p id="loginErro"></p>
+</div>
+
+<div id="app" style="display:none">
+  <div id="aviso-config">Painel ainda não conectado à planilha. Preencha SCRIPT_URL no código.</div>
+  <header>
+    <img src="logo.png" alt="">
+    <h1>Fila de pedidos</h1>
+    <div class="filtros" id="filtros">
+      <button data-f="todos" class="sel">Todos</button>
+      <button data-f="mesa">Mesas</button>
+      <button data-f="entrega">Entrega</button>
+      <button data-f="retirada">Retirada</button>
+    </div>
+    <div class="topo-dir">
+      <span id="conexao" title="Conexão"></span>
+      <button id="som" onclick="alternaSom()">🔔 Som ligado</button>
+      <span id="relogio"></span>
+    </div>
+  </header>
+  <main>
+    <section class="coluna"><h2>Novos <span id="n-novo">0</span></h2><div id="col-novo"></div></section>
+    <section class="coluna"><h2>Preparando <span id="n-preparando">0</span></h2><div id="col-preparando"></div></section>
+    <section class="coluna"><h2>Prontos <span id="n-pronto">0</span></h2><div id="col-pronto"></div></section>
+  </main>
+  <details><summary id="sum-entregue">Entregues (0)</summary><div id="col-entregue"></div></details>
+</div>
+
+<script>
+/* ========= CONFIGURAÇÃO ========= */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbynEIDwnkohmAJuKFgftfutvmrZcnlN6JlwaEYd9yvqBr_VPwtmqsKgUUtIhMttBgc/exec";      // cole aqui a URL do App da Web do Google Apps Script
+const ATUALIZAR_A_CADA = 5; // segundos
+/* ================================ */
+
+const $ = id => document.getElementById(id);
+const brl = v => Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let PIN = "", pedidos = [], vistos = null, filtro = "todos", somLigado = true, audio = null, novosPiscando = new Set();
+
+function guardar(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+function ler(k){ try{ return localStorage.getItem(k) }catch(e){ return null } }
+
+async function api(params){
+  const url = SCRIPT_URL + "?" + new URLSearchParams({...params, pin:PIN}).toString();
+  const r = await fetch(url, {cache:"no-store"});
+  return r.json();
+}
+
+async function entrar(){
+  PIN = $("pin").value.trim();
+  if(!PIN){ $("loginErro").textContent = "Digite o PIN."; return; }
+  audio = audio || new (window.AudioContext||window.webkitAudioContext)();   // som liberado pelo clique
+  if(!SCRIPT_URL){ abrirApp(); $("aviso-config").style.display="block"; return; }
+  try{
+    const r = await api({acao:"listar"});
+    if(!r.ok){ $("loginErro").textContent = r.erro==="pin" ? "PIN incorreto." : "Erro: "+r.erro; return; }
+    guardar("rb_pin", PIN); abrirApp(); receber(r);
+  }catch(e){ $("loginErro").textContent = "Sem conexão com a planilha."; }
+}
+function abrirApp(){
+  $("login").style.display="none"; $("app").style.display="block";
+  if(ler("rb_som")==="0"){ somLigado=false; atualizaBotaoSom(); }
+  setInterval(buscar, ATUALIZAR_A_CADA*1000);
+  setInterval(()=>{ relogio(); desenhar(); }, 30000); relogio();
+}
+
+async function buscar(){
+  if(!SCRIPT_URL) return;
+  try{ const r = await api({acao:"listar"}); if(r.ok){ receber(r); $("conexao").classList.remove("off"); } }
+  catch(e){ $("conexao").classList.add("off"); }
+}
+
+function receber(r){
+  const ids = new Set(r.pedidos.map(p=>p.id));
+  if(vistos){
+    const novos = r.pedidos.filter(p=>!vistos.has(p.id) && p.status==="novo");
+    if(novos.length){ bipe(); novos.forEach(p=>novosPiscando.add(p.id)); piscaTitulo(novos.length); }
+  }
+  vistos = ids; pedidos = r.pedidos; desenhar();
+}
+
+function minutos(p){ return Math.floor((Date.now()-p.criado)/60000); }
+function hora(t){ return new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }
+function rotuloTipo(p){ return p.tipo==="mesa" ? `Mesa ${p.mesa}` : p.tipo==="entrega" ? "Entrega" : "Retirada"; }
+
+const PROXIMO = {novo:"preparando", preparando:"pronto", pronto:"entregue"};
+const ANTERIOR = {preparando:"novo", pronto:"preparando"};
+const TEXTO_BOTAO = {novo:"Começar preparo", preparando:"Marcar pronto", pronto:"Entregue"};
+
+function cartao(p){
+  const m = minutos(p), cls = m>=25 ? "atrasado" : m>=15 ? "atencao" : "";
+  const itens = (p.itens||[]).map(i=>`<li><b>${i.qtd}x</b> ${esc(i.nome)}
+      ${i.adicionais&&i.adicionais.length?`<span class="det">+ ${esc(i.adicionais.join(", "))}</span>`:""}
+      ${i.obs?`<span class="obs">Obs.: ${esc(i.obs)}</span>`:""}</li>`).join("");
+  const pisca = novosPiscando.has(p.id) ? " novo-pisca" : "";
+  return `<div class="card ${p.tipo}${pisca}">
+    <div class="c-topo"><span class="codigo">#${esc(p.id)}</span><span class="tipo">${rotuloTipo(p)}</span></div>
+    <div class="tempo ${cls}">${hora(p.criado)} · há ${m} min</div>
+    <div class="cliente">${esc(p.cliente)}</div>
+    ${p.tipo==="entrega"?`<div class="end">📍 ${esc(p.endereco)}</div>`:""}
+    <ul class="itens">${itens}</ul>
+    <div class="rodape"><span>${esc(p.pagamento)}</span><b style="color:#fff">${brl(p.total)}</b></div>
+    <div class="acoes">
+      ${ANTERIOR[p.status]?`<button class="voltar" onclick="mudar('${p.id}','${ANTERIOR[p.status]}')">‹ voltar</button>`:""}
+      <button class="avancar" onclick="mudar('${p.id}','${PROXIMO[p.status]}')">${TEXTO_BOTAO[p.status]}</button>
+      ${p.status==="novo"?`<button class="cancelar" onclick="cancelar('${p.id}')">Cancelar</button>`:""}
+    </div></div>`;
+}
+
+function desenhar(){
+  const lista = pedidos.filter(p=>filtro==="todos"||p.tipo===filtro).sort((a,b)=>a.criado-b.criado);
+  ["novo","preparando","pronto"].forEach(s=>{
+    const doStatus = lista.filter(p=>p.status===s);
+    $("n-"+s).textContent = doStatus.length;
+    $("col-"+s).innerHTML = doStatus.length ? doStatus.map(cartao).join("") : `<p class="vazio">Nenhum pedido</p>`;
+  });
+  const ent = lista.filter(p=>p.status==="entregue"||p.status==="cancelado").sort((a,b)=>b.atualizado-a.atualizado);
+  $("sum-entregue").textContent = `Entregues e cancelados (${ent.length})`;
+  $("col-entregue").innerHTML = ent.map(p=>`<div class="linha-ent"><span><b>#${esc(p.id)}</b> · ${rotuloTipo(p)} · ${esc(p.cliente)} · ${brl(p.total)}${p.status==="cancelado"?" · <b style='color:#ff9a9a'>cancelado</b>":""}</span>
+      <button onclick="mudar('${p.id}','pronto')">reabrir</button></div>`).join("");
+  document.title = (lista.filter(p=>p.status==="novo").length ? `(${lista.filter(p=>p.status==="novo").length}) ` : "") + "Painel de Pedidos | Real Burger";
+}
+
+async function mudar(id, status){
+  const p = pedidos.find(x=>x.id===id); if(!p) return;
+  const antes = p.status; p.status = status; p.atualizado = Date.now(); novosPiscando.delete(id); desenhar();
+  if(!SCRIPT_URL) return;
+  try{ const r = await api({acao:"status", id, status}); if(!r.ok) throw 0; }
+  catch(e){ p.status = antes; desenhar(); alert("Não consegui salvar. Confira a internet e tente de novo."); }
+}
+function cancelar(id){ if(confirm(`Cancelar o pedido #${id}?`)) mudar(id,"cancelado"); }
+
+document.querySelectorAll("#filtros button").forEach(b=>b.onclick=()=>{
+  filtro=b.dataset.f; document.querySelectorAll("#filtros button").forEach(x=>x.classList.toggle("sel",x===b)); desenhar();
+});
+
+function bipe(){
+  if(!somLigado || !audio) return;
+  [0,0.25,0.5].forEach(t=>{
+    const o=audio.createOscillator(), g=audio.createGain();
+    o.frequency.value = 880; o.type="sine"; o.connect(g); g.connect(audio.destination);
+    g.gain.setValueAtTime(0.0001, audio.currentTime+t); g.gain.exponentialRampToValueAtTime(0.5, audio.currentTime+t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime+t+0.2);
+    o.start(audio.currentTime+t); o.stop(audio.currentTime+t+0.22);
+  });
+}
+function alternaSom(){ somLigado=!somLigado; guardar("rb_som", somLigado?"1":"0"); atualizaBotaoSom(); if(somLigado) bipe(); }
+function atualizaBotaoSom(){ $("som").textContent = somLigado ? "🔔 Som ligado" : "🔕 Som desligado"; }
+let piscaTimer=null;
+function piscaTitulo(n){ /* o título já mostra a contagem; o cartão pisca na tela */ }
+function relogio(){ $("relogio").textContent = new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }
+
+const salvo = ler("rb_pin"); if(salvo) $("pin").value = salvo;
+$("pin").addEventListener("keydown", e=>{ if(e.key==="Enter") entrar(); });
+</script>
+</body>
+</html>

@@ -188,10 +188,21 @@
     </div>
 
     <p class="aviso" id="aviso">Preencha os dados obrigatórios para continuar.</p>
-    <button class="btn zap" onclick="enviarPedido()">
+    <button class="btn zap" id="btnEnviar" onclick="enviarPedido()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.2z"/></svg>
-      Enviar pedido pelo WhatsApp
+      <span id="btnTxt">Enviar pedido pelo WhatsApp</span>
     </button>
+  </div>
+</div>
+
+<!-- Confirmação do pedido da mesa -->
+<div class="fundo" id="mOk" onclick="if(event.target===this)fechar('mOk')">
+  <div class="modal" style="text-align:center">
+    <h3 style="font-size:22px;margin-bottom:6px">Pedido enviado!</h3>
+    <p class="sub">Seu pedido já está na cozinha.</p>
+    <div class="mesa-box" style="margin:16px 0;font-size:18px"><span id="okMesa"></span> · Pedido <span id="okCodigo"></span></div>
+    <p class="sub">O pagamento é feito no caixa ou na mesa, no cartão ou Pix na maquininha.</p>
+    <button class="btn" style="justify-content:center" onclick="fechar('mOk')">Voltar ao cardápio</button>
   </div>
 </div>
 
@@ -201,6 +212,7 @@
    ========================================================= */
 const CONFIG = {
   whatsapp: "5567991903123",          // DDI + DDD + número, só dígitos
+  painelURL: "https://script.google.com/macros/s/AKfycbynEIDwnkohmAJuKFgftfutvmrZcnlN6JlwaEYd9yvqBr_VPwtmqsKgUUtIhMttBgc/exec",                      // URL do App da Web (Google Apps Script) do painel de pedidos
   taxaEntrega: null,                  // ex.: 5 para R$ 5,00 | null = "a combinar"
   pagamentos: ["Cartão de débito", "Cartão de crédito", "Pix (na maquininha)"],  // adicione "Dinheiro" se aceitar
   mesas: 5,                           // quantidade de mesas com QR code
@@ -280,6 +292,7 @@ function montar(){
     $("blocoMesa").style.display = "block"; $("mesaBox").textContent = `Mesa ${MESA}`;
     $("blocoModo").style.display = "none"; $("blocoEndereco").style.display = "none";
     $("rotPag").textContent = "Pagamento (no caixa ou na mesa)";
+    if(CONFIG.painelURL){ $("btnTxt").textContent = "Enviar pedido para a cozinha"; $("btnEnviar").classList.remove("zap"); $("btnEnviar").querySelector("svg").style.display="none"; $("btnEnviar").style.justifyContent="center"; }
   }
   // destaca aba conforme rolagem
   const secs=[...document.querySelectorAll("section")], links=[...document.querySelectorAll("nav a")];
@@ -366,12 +379,20 @@ function alteraItem(k,d){ carrinho[k].qtd+=d; if(carrinho[k].qtd<1) carrinho.spl
 function setModo(m){ modo=m; $("tEntrega").classList.toggle("sel",m==="entrega"); $("tRetirada").classList.toggle("sel",m==="retirada"); $("blocoEndereco").style.display=m==="entrega"?"block":"none"; desenhaCarrinho(); }
 function fechar(id){ $(id).classList.remove("aberto"); }
 
-function enviarPedido(){
-  const nome=$("cNome").value.trim(), rua=$("cRua").value.trim(), bairro=$("cBairro").value.trim(), ref=$("cRef").value.trim();
-  if(!nome || (modo==="entrega" && (!rua||!bairro))){ $("aviso").style.display="block"; return; }
-  $("aviso").style.display="none";
-  const taxa = modo==="entrega" && CONFIG.taxaEntrega ? CONFIG.taxaEntrega : 0;
-  let t = modo==="mesa" ? `*PEDIDO NA MESA ${MESA}: REAL BURGER*\n\n` : `*NOVO PEDIDO: REAL BURGER*\n\n`;
+function codigoPedido(){ return String(Math.floor(100+Math.random()*900)); }
+
+function montarPedido(nome, rua, bairro, ref){
+  return {
+    id: codigoPedido(), tipo: modo, mesa: modo==="mesa" ? MESA : "", cliente: nome,
+    endereco: modo==="entrega" ? `${rua}, ${bairro}${ref?` (ref.: ${ref})`:""}` : "",
+    itens: carrinho.map(i=>({ qtd:i.qtd, nome:i.nome, adicionais:i.adicionais.map(a=>a.nome), obs:i.obs })),
+    total: subtotal() + (modo==="entrega" && CONFIG.taxaEntrega ? CONFIG.taxaEntrega : 0),
+    pagamento: $("cPag").value
+  };
+}
+
+function mensagemWhats(ped){
+  let t = modo==="mesa" ? `*PEDIDO #${ped.id} NA MESA ${MESA}: REAL BURGER*\n\n` : `*PEDIDO #${ped.id}: REAL BURGER*\n\n`;
   carrinho.forEach(i=>{
     t += `*${i.qtd}x ${i.nome}* (${brl(i.unit*i.qtd)})\n`;
     if(i.adicionais.length) t += `   + ${i.adicionais.map(a=>a.nome).join(", ")}\n`;
@@ -379,11 +400,41 @@ function enviarPedido(){
   });
   t += `\nSubtotal: ${brl(subtotal())}\n`;
   if(modo==="entrega") t += `Taxa de entrega: ${CONFIG.taxaEntrega==null?"a combinar":brl(CONFIG.taxaEntrega)}\n`;
-  t += `*Total: ${brl(subtotal()+taxa)}*\n\n`;
-  t += `*Cliente:* ${nome}\n`;
-  t += modo==="mesa" ? `*Consumo no local: Mesa ${MESA}*\n` : modo==="entrega" ? `*Entrega:* ${rua}, ${bairro}${ref?` (ref.: ${ref})`:""}\n` : `*Retirada no local*\n`;
-  t += `*Pagamento:* ${$("cPag").value}`;
-  window.open(`https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(t)}`,"_blank");
+  t += `*Total: ${brl(ped.total)}*\n\n*Cliente:* ${ped.cliente}\n`;
+  t += modo==="mesa" ? `*Consumo no local: Mesa ${MESA}*\n` : modo==="entrega" ? `*Entrega:* ${ped.endereco}\n` : `*Retirada no local*\n`;
+  t += `*Pagamento:* ${ped.pagamento}`;
+  return `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(t)}`;
+}
+
+function mandaParaPainel(ped){
+  return fetch(CONFIG.painelURL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(ped) });
+}
+
+async function enviarPedido(){
+  const nome=$("cNome").value.trim(), rua=$("cRua").value.trim(), bairro=$("cBairro").value.trim(), ref=$("cRef").value.trim();
+  if(!nome || (modo==="entrega" && (!rua||!bairro))){ $("aviso").style.display="block"; return; }
+  $("aviso").style.display="none";
+  const ped = montarPedido(nome, rua, bairro, ref);
+  const zap = mensagemWhats(ped);
+
+  // Sem painel configurado: tudo vai pelo WhatsApp, como antes
+  if(!CONFIG.painelURL){ window.open(zap,"_blank"); return; }
+
+  if(modo==="mesa"){
+    // Mesa: vai direto para o painel da cozinha, sem WhatsApp
+    const btn=$("btnEnviar"); const txt=$("btnTxt").textContent; btn.disabled=true; $("btnTxt").textContent="Enviando...";
+    try{
+      await mandaParaPainel(ped);
+      carrinho=[]; atualizaBarra(); fechar("mCarrinho");
+      $("okCodigo").textContent = `#${ped.id}`; $("okMesa").textContent = `Mesa ${MESA}`;
+      $("mOk").classList.add("aberto");
+    }catch(e){ location.href = zap; }   // sem internet para o painel: cai no WhatsApp
+    finally{ btn.disabled=false; $("btnTxt").textContent=txt; }
+    return;
+  }
+  // Entrega e retirada: vai para o painel e abre o WhatsApp para o cliente acompanhar
+  mandaParaPainel(ped).catch(()=>{});
+  window.open(zap,"_blank");
 }
 
 montar();
