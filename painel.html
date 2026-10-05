@@ -124,7 +124,7 @@ const ATUALIZAR_A_CADA = 5; // segundos
 const $ = id => document.getElementById(id);
 const brl = v => Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let PIN = "", pedidos = [], vistos = null, filtro = "todos", somLigado = true, audio = null, novosPiscando = new Set();
+let pendentes = new Map(); function aplicaPendentes(lista){ const agora = Date.now(); lista.forEach(p=>{ const x = pendentes.get(p.id); if(!x) return; if(p.status===x.status || agora>x.ate){ pendentes.delete(p.id); } else { p.status = x.status; p.atualizado = x.quando; } }); } let PIN = "", pedidos = [], vistos = null, filtro = "todos", somLigado = true, audio = null, novosPiscando = new Set();
 
 function guardar(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
 function ler(k){ try{ return localStorage.getItem(k) }catch(e){ return null } }
@@ -165,7 +165,7 @@ function receber(r){
     const novos = r.pedidos.filter(p=>!vistos.has(p.id) && p.status==="novo");
     if(novos.length){ bipe(); novos.forEach(p=>novosPiscando.add(p.id)); piscaTitulo(novos.length); }
   }
-  vistos = ids; pedidos = r.pedidos; desenhar();
+  vistos = ids; aplicaPendentes(r.pedidos); pedidos = r.pedidos; desenhar();
 }
 
 function minutos(p){ return Math.floor((Date.now()-p.criado)/60000); }
@@ -212,7 +212,7 @@ function desenhar(){
 
 async function mudar(id, status){
   const p = pedidos.find(x=>x.id===id); if(!p) return;
-  const antes = p.status; p.status = status; p.atualizado = Date.now(); novosPiscando.delete(id); desenhar();
+  const antes = p.status; p.status = status; p.atualizado = Date.now(); pendentes.set(id, {status, quando: Date.now(), ate: Date.now()+45000}); novosPiscando.delete(id); desenhar();
   if(!SCRIPT_URL) return;
   try{ const r = await api({acao:"status", id, status}); if(!r.ok) throw 0; }
   catch(e){ p.status = antes; desenhar(); alert("Não consegui salvar. Confira a internet e tente de novo."); }
