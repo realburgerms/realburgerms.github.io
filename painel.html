@@ -215,7 +215,7 @@ async function mudar(id, status){
   const antes = p.status; p.status = status; p.atualizado = Date.now(); pendentes.set(id, {status, quando: Date.now(), ate: Date.now()+45000}); novosPiscando.delete(id); desenhar();
   if(!SCRIPT_URL) return;
   try{ const r = await api({acao:"status", id, status}); if(!r.ok) throw 0; }
-  catch(e){ p.status = antes; desenhar(); alert("Não consegui salvar. Confira a internet e tente de novo."); }
+  catch(e){ pendentes.delete(id); (pedidos.find(x=>x.id===id)||p).status = antes; desenhar(); alert("Não consegui salvar. Confira a internet e tente de novo."); }
 }
 function cancelar(id){ if(confirm(`Cancelar o pedido #${id}?`)) mudar(id,"cancelado"); }
 
