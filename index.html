@@ -54,7 +54,7 @@
   .item:hover{border-color:var(--red)}
   .thumb{width:74px;height:74px;border-radius:12px;background:var(--card2);flex-shrink:0;display:grid;place-items:center;overflow:hidden}
   .thumb img{width:100%;height:100%;object-fit:cover}
-  .thumb svg{width:44px;height:44px}
+  .thumb svg{width:44px;height:44px} .thumb img{cursor:zoom-in} .zoom{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:16px;cursor:zoom-out} .zoom.aberto{display:flex} .zoom figure{margin:0;text-align:center} .zoom img{width:min(92vw,480px);height:auto;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.6);display:block} .zoom figcaption{color:#fff;font-weight:600;font-size:18px;margin-top:12px} .zoom figcaption::after{content:"Toque para fechar";display:block;font-weight:400;font-size:13px;opacity:.7;margin-top:4px}
   .info{flex:1;min-width:0}
   .info h3{font-size:16px;font-weight:600}
   .info p{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.4}
@@ -143,7 +143,7 @@
 </div>
 
 <!-- Modal do produto -->
-<div class="fundo" id="mProduto" onclick="if(event.target===this)fechar('mProduto')">
+<div class="zoom" id="zoom" onclick="fecharFoto()"><figure><img id="zoomImg" alt=""><figcaption id="zoomNome"></figcaption></figure></div><div class="fundo" id="mProduto" onclick="if(event.target===this)fechar('mProduto')">
   <div class="modal">
     <div class="modal-topo">
       <div><h3 id="pNome"></h3><p class="sub" id="pDesc"></p></div>
@@ -290,7 +290,7 @@ function montar(){
     <section id="cat${i}"><h2>${c.cat}</h2><div class="grid">
       ${c.itens.map(it=>`
         <div class="item" onclick="abrirProduto('${it.id}')">
-          <div class="thumb">${it.foto?`<img src="${it.foto}" alt="${it.nome}">`:ICONES[c.icone]}</div>
+          <div class="thumb">${it.foto?`<img src="${it.foto}" alt="${it.nome}" onclick="event.stopPropagation();verFoto('${it.foto}','${it.nome}')">`:ICONES[c.icone]}</div>
           <div class="info"><h3>${it.nome}</h3>${it.desc?`<p>${it.desc}</p>`:""}<div class="preco">${brl(it.preco)}</div></div>
           <button class="add" aria-label="Adicionar">+</button>
         </div>`).join("")}
@@ -338,7 +338,7 @@ function statusLoja(){
 
 function acharItem(id){ for(const c of CARDAPIO){const it=c.itens.find(x=>x.id===id); if(it) return {...it, cat:c.cat}; } }
 
-function abrirProduto(id){
+function verFoto(src,nome){ $("zoomImg").src=src; $("zoomImg").alt=nome; $("zoomNome").textContent=nome; $("zoom").classList.add("aberto"); } function fecharFoto(){ $("zoom").classList.remove("aberto"); } document.addEventListener("keydown",e=>{ if(e.key==="Escape") fecharFoto(); }); function abrirProduto(id){
   atual = acharItem(id); qtd = 1;
   $("pNome").textContent = atual.nome;
   $("pDesc").textContent = atual.desc;
