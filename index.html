@@ -184,7 +184,7 @@
     <div id="blocoEndereco">
       <label class="campo"><span>Endereço (rua e número)</span><input type="text" id="cRua" autocomplete="street-address"></label>
       <label class="campo"><span>Bairro</span><input type="text" id="cBairro"></label>
-      <label class="campo"><span>Ponto de referência (opcional)</span><input type="text" id="cRef"></label>
+      <label class="campo"><span>Ponto de referência (opcional)</span><input type="text" id="cRef"></label><p class="sub" style="font-size:12.5px;margin-top:6px">Entregamos em até 6 km da loja, com taxa de R$ 5,00.</p>
     </div>
 
     <div class="rotulo" id="rotPag">Pagamento na entrega</div>
@@ -225,7 +225,7 @@
 const CONFIG = {
   whatsapp: "5567991903123",          // DDI + DDD + número, só dígitos
   painelURL: "https://script.google.com/macros/s/AKfycbynEIDwnkohmAJuKFgftfutvmrZcnlN6JlwaEYd9yvqBr_VPwtmqsKgUUtIhMttBgc/exec",                      // URL do App da Web (Google Apps Script) do painel de pedidos
-  taxaEntrega: null,                  // ex.: 5 para R$ 5,00 | null = "a combinar"
+  taxaEntrega: 5,                  // ex.: 5 para R$ 5,00 | null = "a combinar"
   pagamentos: ["Cartão de débito", "Cartão de crédito", "Pix (na maquininha)", "Dinheiro"],
   mesas: 5,                           // quantidade de mesas com QR code
   horario: { abre: "18:00", fecha: "22:00", dias: [0,6] }, // 0 = domingo, 6 = sábado
