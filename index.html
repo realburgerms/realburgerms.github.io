@@ -102,6 +102,7 @@
   .toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .toggle button{background:var(--card2);color:var(--txt);padding:11px;border-radius:10px;border:1px solid var(--line);font-size:14px;font-weight:500}
   .toggle button.sel{background:var(--red);border-color:var(--red)}
+  .aviso-taxa{display:none;background:rgba(255,210,122,.12);border:1px solid #ffd27a;color:#ffe6b0;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.45;margin-top:12px}
   .faixa-mesa{background:var(--yellow);color:#061433;text-align:center;font-weight:600;padding:10px 16px;font-size:15px;display:none}
   .nota{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
   .mesa-box{background:var(--card2);border:1px solid var(--yellow);border-radius:10px;padding:12px;font-weight:600;text-align:center}
@@ -184,7 +185,7 @@
     <div id="blocoEndereco">
       <label class="campo"><span>Endereço (rua e número)</span><input type="text" id="cRua" autocomplete="street-address"></label>
       <label class="campo"><span>Bairro</span><input type="text" id="cBairro"></label>
-      <label class="campo"><span>Ponto de referência (opcional)</span><input type="text" id="cRef"></label><p class="sub" style="font-size:12.5px;margin-top:6px">Entregamos em até 6 km da loja, com taxa de R$ 5,00.</p>
+      <label class="campo"><span>Ponto de referência (opcional)</span><input type="text" id="cRef"></label><p class="sub" style="font-size:12.5px;margin-top:6px">Entregamos em até 6 km da loja. A taxa de entrega depende do seu endereço e é combinada pelo WhatsApp.</p>
     </div>
 
     <div class="rotulo" id="rotPag">Pagamento na entrega</div>
@@ -196,8 +197,9 @@
     <div style="margin-top:16px">
       <div class="total"><span>Subtotal</span><span id="tSub"></span></div>
       <div class="total" id="linhaTaxa"><span>Taxa de entrega</span><span id="tTaxa"></span></div>
-      <div class="total grande"><span>Total</span><span id="tTotal"></span></div>
+      <div class="total grande"><span id="rotTotal">Total</span><span id="tTotal"></span></div>
     </div>
+    <p class="aviso-taxa" id="avisoTaxa">Atenção: este valor ainda <b>não inclui a taxa de entrega</b>. Ao enviar, você finaliza o pedido no WhatsApp, e a loja informa a taxa para o seu endereço antes de preparar.</p>
 
     <p class="aviso" id="aviso">Preencha os dados obrigatórios para continuar.</p>
     <button class="btn zap" id="btnEnviar" onclick="enviarPedido()">
@@ -226,7 +228,7 @@
 const CONFIG = {
   whatsapp: "5567991903123",          // DDI + DDD + número, só dígitos
   painelURL: "https://script.google.com/macros/s/AKfycbynEIDwnkohmAJuKFgftfutvmrZcnlN6JlwaEYd9yvqBr_VPwtmqsKgUUtIhMttBgc/exec",                      // URL do App da Web (Google Apps Script) do painel de pedidos
-  taxaEntrega: 5,                  // ex.: 5 para R$ 5,00 | null = "a combinar"
+  taxaEntrega: null,               // ex.: 5 para R$ 5,00 | null = "a combinar" pelo WhatsApp
   pagamentos: ["Cartão de débito", "Cartão de crédito", "Pix (na maquininha)", "Dinheiro"],
   mesas: 5,                           // quantidade de mesas com QR code
   horario: { abre: "18:00", fecha: "22:00", dias: [0,6] }, // 0 = domingo, 6 = sábado
@@ -387,6 +389,9 @@ function desenhaCarrinho(){
   $("tTaxa").textContent = CONFIG.taxaEntrega==null ? "a combinar" : brl(CONFIG.taxaEntrega);
   $("tSub").textContent = brl(subtotal());
   $("tTotal").textContent = brl(subtotal()+taxa);
+  const combinar = modo==="entrega" && CONFIG.taxaEntrega==null;
+  $("rotTotal").textContent = combinar ? "Total dos produtos" : "Total";
+  $("avisoTaxa").style.display = combinar ? "block" : "none";
 }
 function alteraItem(k,d){ carrinho[k].qtd+=d; if(carrinho[k].qtd<1) carrinho.splice(k,1); atualizaBarra(); desenhaCarrinho(); }
 function setModo(m){ modo=m; setTimeout(atualizaTroco,0); $("tEntrega").classList.toggle("sel",m==="entrega"); $("tRetirada").classList.toggle("sel",m==="retirada"); $("blocoEndereco").style.display=m==="entrega"?"block":"none"; desenhaCarrinho(); }
@@ -425,7 +430,7 @@ function mensagemWhats(ped){
   });
   t += `\nSubtotal: ${brl(subtotal())}\n`;
   if(modo==="entrega") t += `Taxa de entrega: ${CONFIG.taxaEntrega==null?"a combinar":brl(CONFIG.taxaEntrega)}\n`;
-  t += `*Total: ${brl(ped.total)}*\n\n*Cliente:* ${ped.cliente}\n`;
+  t += modo==="entrega" && CONFIG.taxaEntrega==null ? `*Total dos produtos: ${brl(ped.total)}* (+ taxa de entrega a combinar)\n\n*Cliente:* ${ped.cliente}\n` : `*Total: ${brl(ped.total)}*\n\n*Cliente:* ${ped.cliente}\n`;
   t += modo==="mesa" ? `*Consumo no local: Mesa ${MESA}*\n` : modo==="entrega" ? `*Entrega:* ${ped.endereco}\n` : `*Retirada no local*\n`;
   t += `*Pagamento:* ${ped.pagamento}`;
   return `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(t)}`;
