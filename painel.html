@@ -125,6 +125,9 @@
   .lanc-it button{background:none;color:#ff9a9a;font-size:13px}
   .b-enviar{width:100%;background:var(--retirada);color:#061433;font-weight:700;font-size:16px;padding:13px;border-radius:10px;margin-top:8px}
   .b-enviar:disabled{opacity:.5}
+  .b-taxa{width:100%;margin-top:8px;background:transparent;border:1.5px dashed #ffd27a!important;color:#ffd27a;font-weight:700;font-size:14px;padding:9px;border-radius:10px}
+  .taxa-ok{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:12.5px;color:var(--claro)}
+  .taxa-ok button{background:none;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:12px}
   #aviso-config{background:var(--entrega);color:#061433;padding:10px 16px;font-weight:600;font-size:14px;display:none}
 </style>
 </head>
@@ -230,7 +233,7 @@ function receber(r){
     const novos = r.pedidos.filter(p=>!vistos.has(p.id) && p.status==="novo");
     if(novos.length){ bipe(); novos.forEach(p=>novosPiscando.add(p.id)); piscaTitulo(novos.length); }
   }
-  vistos = ids; aplicaPendentes(r.pedidos); pedidos = r.pedidos; desenhar();
+  vistos = ids; aplicaPendentes(r.pedidos); aplicaTaxas(r.pedidos); pedidos = r.pedidos; desenhar();
 }
 
 function minutos(p){ return Math.floor((Date.now()-p.criado)/60000); }
@@ -253,7 +256,8 @@ function cartao(p){
     <div class="cliente">${esc(p.cliente)}</div>
     ${p.tipo==="entrega"?`<div class="end">📍 ${esc(p.endereco)}</div>`:""}
     <ul class="itens">${itens}</ul>
-    <div class="rodape"><span${/troco para/i.test(p.pagamento)?' style="color:#ffd27a;font-weight:700"':""}>${esc(p.pagamento)}</span><b style="color:#fff">${brl(p.total)}${p.tipo==="entrega"?` <small style="color:#ffd27a;font-weight:600">+ entrega</small>`:""}</b></div>
+    <div class="rodape"><span${/troco para/i.test(p.pagamento)?' style="color:#ffd27a;font-weight:700"':""}>${esc(p.pagamento)}</span><b style="color:#fff">${brl(p.total)}${p.tipo==="entrega"&&p.taxa==null?` <small style="color:#ffd27a;font-weight:600">+ entrega</small>`:""}</b></div>
+    ${p.tipo==="entrega"?(p.taxa==null?`<button class="b-taxa" onclick="informarTaxa('${p.id}')">Informar taxa de entrega</button>`:`<div class="taxa-ok"><span>Produtos ${brl(p.total-p.taxa)} + entrega ${brl(p.taxa)}</span><button onclick="informarTaxa('${p.id}')">alterar</button></div>`):""}
     <div class="acoes">
       ${ANTERIOR[p.status]?`<button class="voltar" onclick="mudar('${p.id}','${ANTERIOR[p.status]}')">‹ voltar</button>`:""}
       <button class="avancar" onclick="mudar('${p.id}','${PROXIMO[p.status]}')">${TEXTO_BOTAO[p.status]}</button>
@@ -304,6 +308,22 @@ function atualizaBotaoSom(){ $("som").textContent = somLigado ? "🔔 Som ligado
 let piscaTimer=null;
 function piscaTitulo(n){ /* o título já mostra a contagem; o cartão pisca na tela */ }
 function relogio(){ $("relogio").textContent = new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }
+
+/* ========= TAXA DE ENTREGA ========= */
+let taxasPend = new Map();
+function aplicaTaxas(lista){ const agora=Date.now(); lista.forEach(p=>{ const x=taxasPend.get(p.id); if(!x) return; if(Number(p.taxa)===x.taxa || agora>x.ate){ taxasPend.delete(p.id); } else { p.taxa=x.taxa; p.total=x.total; } }); }
+async function informarTaxa(id){
+  const p = pedidos.find(x=>x.id===id); if(!p) return;
+  const produtos = Number(p.total||0) - Number(p.taxa||0);
+  const r = prompt(`Taxa de entrega combinada com ${p.cliente||"o cliente"} (pedido #${id}).\nProdutos: ${brl(produtos)}\n\nDigite o valor da taxa, ex.: 6,00`, p.taxa!=null ? String(p.taxa).replace(".",",") : "");
+  if(r===null) return;
+  const taxa = Math.round(Number(String(r).replace(/[^\d,.]/g,"").replace(",","."))*100)/100;
+  if(!(taxa>=0 && taxa<=200) || String(r).trim()===""){ alert("Valor inválido. Digite só o número, ex.: 6,00"); return; }
+  const antes = {taxa:p.taxa, total:p.total};
+  p.taxa = taxa; p.total = produtos + taxa; taxasPend.set(id,{taxa, total:p.total, ate:Date.now()+45000}); desenhar();
+  try{ const res = await api({acao:"taxa", id, valor:String(taxa)}); if(!res.ok || res.taxa===undefined) throw 0; }
+  catch(e){ taxasPend.delete(id); p.taxa=antes.taxa; p.total=antes.total; desenhar(); alert("Não consegui salvar a taxa. Confira a internet e tente de novo."); }
+}
 
 /* ========= CONTAS DAS MESAS ========= */
 const QTD_MESAS = 5;
