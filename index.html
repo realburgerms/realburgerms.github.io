@@ -213,8 +213,9 @@
     <h3 style="font-size:22px;margin-bottom:6px">Pedido enviado!</h3>
     <p class="sub">Seu pedido já está na cozinha.</p>
     <div class="mesa-box" style="margin:16px 0;font-size:18px"><span id="okMesa"></span> · Pedido <span id="okCodigo"></span></div>
-    <p class="sub">O pagamento é feito no caixa ou na mesa, no cartão, no Pix na maquininha ou em dinheiro.</p>
-    <button class="btn" style="justify-content:center" onclick="fechar('mOk')">Voltar ao cardápio</button>
+    <div id="okConta" style="display:none;margin:0 0 14px"><p class="sub" style="margin-bottom:4px">Sua conta até agora</p><div style="font-size:26px;font-weight:700" id="okTotal"></div></div>
+    <p class="sub">Quer mais alguma coisa? É só pedir por aqui de novo: tudo entra na mesma conta da mesa. O pagamento é feito no caixa no final, no cartão, no Pix na maquininha ou em dinheiro.</p>
+    <button class="btn" style="justify-content:center" onclick="fechar('mOk')">Pedir mais</button>
   </div>
 </div>
 
@@ -454,7 +455,8 @@ async function enviarPedido(){
       await mandaParaPainel(ped);
       carrinho=[]; atualizaBarra(); fechar("mCarrinho");
       $("okCodigo").textContent = `#${ped.id}`; $("okMesa").textContent = `Mesa ${MESA}`;
-      $("mOk").classList.add("aberto");
+      try{ sessionStorage.setItem("rb_nome", nome); }catch(e){}
+      $("okConta").style.display="none"; $("mOk").classList.add("aberto"); mostraConta();
     }catch(e){ location.href = zap; }   // sem internet para o painel: cai no WhatsApp
     finally{ btn.disabled=false; $("btnTxt").textContent=txt; }
     return;
@@ -464,7 +466,15 @@ async function enviarPedido(){
   window.open(zap,"_blank");
 }
 
+async function mostraConta(){
+  try{
+    const r = await (await fetch(`${CONFIG.painelURL}?acao=conta&mesa=${MESA}`,{cache:"no-store"})).json();
+    if(r.ok && r.total>0){ $("okTotal").textContent = brl(r.total); $("okConta").style.display="block"; }
+  }catch(e){}
+}
+
 montar();
+if(MESA){ try{ const n=sessionStorage.getItem("rb_nome"); if(n) $("cNome").value=n; }catch(e){} }
 </script>
 </body>
 </html>

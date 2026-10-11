@@ -77,6 +77,54 @@
   summary{cursor:pointer;font-weight:600;color:var(--muted)}
   .linha-ent{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .linha-ent button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:12px}
+
+  /* Contas das mesas */
+  .vista{display:flex;gap:6px}
+  .vista button{background:var(--card);color:#fff;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid var(--line)}
+  .vista button.sel{background:#ffd27a;color:#061433;border-color:#ffd27a}
+  #vContas{padding:12px;display:none}
+  .contas-topo{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .contas-topo h2{font-family:'Alfa Slab One',serif;font-weight:400;font-size:20px}
+  .btn-lancar{background:var(--azul);color:#fff;font-weight:700;font-size:14px;padding:10px 16px;border-radius:10px}
+  .grade-contas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;align-items:start}
+  .conta{background:var(--col);border-radius:14px;padding:14px;border-top:5px solid var(--mesa)}
+  .conta-topo{display:flex;justify-content:space-between;align-items:baseline}
+  .conta-topo b{font-family:'Alfa Slab One',serif;font-weight:400;font-size:24px}
+  .conta-topo span{font-size:13px;color:var(--muted)}
+  .conta-ped{border-top:1px solid var(--line);padding:8px 0;font-size:14px}
+  .conta-ped .cab{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:3px}
+  .conta-ped .st{font-weight:700;text-transform:uppercase;font-size:11px}
+  .conta-total{display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--corda);padding-top:10px;margin-top:4px;font-size:15px}
+  .conta-total b{font-size:24px}
+  .conta-acoes{display:flex;gap:8px;margin-top:12px}
+  .conta-acoes button{flex:1;padding:12px;border-radius:10px;font-weight:700;font-size:14px}
+  .b-add{background:var(--card);color:#fff;border:1px solid var(--line)!important}
+  .b-fechar{background:var(--retirada);color:#061433}
+  .linha-conta{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line);gap:10px}
+
+  /* Lançar itens */
+  .fundo{position:fixed;inset:0;background:rgba(3,10,28,.75);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .fundo.aberto{display:flex}
+  .modal{background:var(--col);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px}
+  @media(min-width:700px){.fundo{align-items:center}.modal{border-radius:18px}}
+  .modal h3{font-family:'Alfa Slab One',serif;font-weight:400;font-size:20px;display:flex;justify-content:space-between;align-items:center}
+  .modal h3 button{background:none;color:var(--muted);font-size:22px}
+  .sel-mesa{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+  .sel-mesa button{background:var(--card);color:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:700}
+  .sel-mesa button.sel{background:var(--mesa);color:#061433;border-color:var(--mesa)}
+  .cat-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 4px}
+  .prod{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .prod small{color:var(--muted)}
+  .prod button{background:var(--azul);color:#fff;border-radius:8px;width:38px;height:34px;font-size:20px;font-weight:700;flex-shrink:0}
+  .opc{background:var(--card);border-radius:10px;padding:10px;margin:6px 0 10px;font-size:13px}
+  .opc label{display:inline-flex;align-items:center;gap:5px;margin:3px 10px 3px 0}
+  .opc input[type=text]{width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--col);color:#fff;font-family:inherit}
+  .opc .ok{background:var(--azul);color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;margin-top:8px}
+  .lanc{position:sticky;bottom:-16px;background:var(--col);border-top:2px solid var(--corda);margin:10px -16px -16px;padding:12px 16px}
+  .lanc-it{display:flex;justify-content:space-between;font-size:14px;padding:3px 0}
+  .lanc-it button{background:none;color:#ff9a9a;font-size:13px}
+  .b-enviar{width:100%;background:var(--retirada);color:#061433;font-weight:700;font-size:16px;padding:13px;border-radius:10px;margin-top:8px}
+  .b-enviar:disabled{opacity:.5}
   #aviso-config{background:var(--entrega);color:#061433;padding:10px 16px;font-weight:600;font-size:14px;display:none}
 </style>
 </head>
@@ -101,18 +149,35 @@
       <button data-f="entrega">Entrega</button>
       <button data-f="retirada">Retirada</button>
     </div>
+    <div class="vista"><button id="vbFila" class="sel" onclick="vista('fila')">Fila</button><button id="vbContas" onclick="vista('contas')">Contas abertas (0)</button></div>
     <div class="topo-dir">
       <span id="conexao" title="Conexão"></span>
       <button id="som" onclick="alternaSom()">🔔 Som ligado</button>
       <span id="relogio"></span>
     </div>
   </header>
-  <main>
+  <section id="vContas">
+    <div class="contas-topo"><h2>Contas das mesas</h2><button class="btn-lancar" onclick="abrirLancar(null)">+ Lançar pedido numa mesa</button></div>
+    <div class="grade-contas" id="gradeContas"></div>
+    <details style="margin:16px 0 0"><summary id="sum-fechadas">Contas fechadas (0)</summary><div id="listaFechadas"></div></details>
+  </section>
+  <main id="vFila">
     <section class="coluna"><h2>Novos <span id="n-novo">0</span></h2><div id="col-novo"></div></section>
     <section class="coluna"><h2>Preparando <span id="n-preparando">0</span></h2><div id="col-preparando"></div></section>
     <section class="coluna"><h2>Prontos <span id="n-pronto">0</span></h2><div id="col-pronto"></div></section>
   </main>
-  <details><summary id="sum-entregue">Entregues (0)</summary><div id="col-entregue"></div></details>
+  <details id="detEntregue"><summary id="sum-entregue">Entregues (0)</summary><div id="col-entregue"></div></details>
+</div>
+
+<div class="fundo" id="mLancar" onclick="if(event.target===this)fecharLancar()">
+  <div class="modal">
+    <h3><span id="lancTitulo">Lançar na mesa</span><button onclick="fecharLancar()">✕</button></h3>
+    <div class="sel-mesa" id="lancMesas"></div>
+    <div id="lancCardapio"><p class="vazio">Carregando cardápio...</p></div>
+    <div class="lanc"><div id="lancLista"></div>
+      <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:4px"><span>Total</span><span id="lancTotal">R$ 0,00</span></div>
+      <button class="b-enviar" id="lancEnviar" onclick="enviarLancamento()">Enviar para a cozinha</button></div>
+  </div>
 </div>
 
 <script>
@@ -207,6 +272,7 @@ function desenhar(){
   $("sum-entregue").textContent = `Entregues e cancelados (${ent.length})`;
   $("col-entregue").innerHTML = ent.map(p=>`<div class="linha-ent"><span><b>#${esc(p.id)}</b> · ${rotuloTipo(p)} · ${esc(p.cliente)} · ${brl(p.total)}${p.status==="cancelado"?" · <b style='color:#ff9a9a'>cancelado</b>":""}</span>
       <button onclick="mudar('${p.id}','pronto')">reabrir</button></div>`).join("");
+  desenharContas();
   document.title = (lista.filter(p=>p.status==="novo").length ? `(${lista.filter(p=>p.status==="novo").length}) ` : "") + "Painel de Pedidos | Real Burger";
 }
 
@@ -238,6 +304,109 @@ function atualizaBotaoSom(){ $("som").textContent = somLigado ? "🔔 Som ligado
 let piscaTimer=null;
 function piscaTitulo(n){ /* o título já mostra a contagem; o cartão pisca na tela */ }
 function relogio(){ $("relogio").textContent = new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }
+
+/* ========= CONTAS DAS MESAS ========= */
+const QTD_MESAS = 5;
+let vistaAtual = "fila", fechandoAte = new Map(), CARD = null, ADIC = [], lanc = {mesa:null, itens:[], aberto:null};
+
+function vista(v){
+  vistaAtual = v; $("vbFila").classList.toggle("sel", v==="fila"); $("vbContas").classList.toggle("sel", v==="contas");
+  $("vFila").style.display = v==="fila" ? "" : "none"; $("detEntregue").style.display = v==="fila" ? "" : "none";
+  $("filtros").style.display = v==="fila" ? "" : "none"; $("vContas").style.display = v==="contas" ? "block" : "none";
+  desenharContas();
+}
+function contaFechada(p){ return !!p.conta || (fechandoAte.get(p.id)||0) > Date.now(); }
+function contasAbertas(){
+  const m = new Map();
+  pedidos.filter(p=>p.tipo==="mesa" && p.status!=="cancelado" && !contaFechada(p)).sort((a,b)=>a.criado-b.criado)
+    .forEach(p=>{ const k=String(p.mesa); if(!m.has(k)) m.set(k,[]); m.get(k).push(p); });
+  return [...m.entries()].sort((a,b)=>Number(a[0])-Number(b[0]));
+}
+const ROT_ST = {novo:"na fila", preparando:"preparando", pronto:"pronto", entregue:"entregue"};
+function desenharContas(){
+  const abertas = contasAbertas();
+  $("vbContas").textContent = `Contas abertas (${abertas.length})`;
+  if(vistaAtual!=="contas") return;
+  $("gradeContas").innerHTML = abertas.length ? abertas.map(([mesa,lista])=>{
+    const total = lista.reduce((s,p)=>s+Number(p.total||0),0);
+    const peds = lista.map(p=>`<div class="conta-ped"><div class="cab"><span>#${esc(p.id)} · ${hora(p.criado)}${p.cliente?` · ${esc(p.cliente)}`:""}</span><span class="st">${ROT_ST[p.status]||""}</span></div>
+      ${(p.itens||[]).map(i=>`<div><b>${i.qtd}x</b> ${esc(i.nome)}${i.adicionais&&i.adicionais.length?` <small style="color:var(--claro)">+ ${esc(i.adicionais.join(", "))}</small>`:""}</div>`).join("")}
+      <div style="text-align:right;color:var(--claro);font-size:13px">${brl(p.total)}</div></div>`).join("");
+    return `<div class="conta"><div class="conta-topo"><b>Mesa ${esc(mesa)}</b><span>aberta às ${hora(lista[0].criado)}</span></div>${peds}
+      <div class="conta-total"><span>Total da conta</span><b>${brl(total)}</b></div>
+      <div class="conta-acoes"><button class="b-add" onclick="abrirLancar(${Number(mesa)})">+ Adicionar item</button><button class="b-fechar" onclick="fecharConta('${esc(mesa)}')">Fechar conta</button></div></div>`;
+  }).join("") : `<p class="vazio">Nenhuma mesa com conta aberta.</p>`;
+  const fech = new Map();
+  pedidos.filter(p=>p.tipo==="mesa" && p.status!=="cancelado" && p.conta).forEach(p=>{ const k=p.mesa+"|"+p.conta; if(!fech.has(k)) fech.set(k,{mesa:p.mesa, quando:p.conta.replace("fechada ","").slice(11,16), total:0}); fech.get(k).total+=Number(p.total||0); });
+  const lf=[...fech.values()].reverse();
+  $("sum-fechadas").textContent = `Contas fechadas (${lf.length})`;
+  $("listaFechadas").innerHTML = lf.map(c=>`<div class="linha-conta"><span>Mesa ${esc(c.mesa)} · fechada às ${esc(c.quando)}</span><b>${brl(c.total)}</b></div>`).join("");
+}
+async function fecharConta(mesa){
+  const lista = (contasAbertas().find(c=>c[0]===String(mesa))||[])[1]; if(!lista) return;
+  const total = lista.reduce((s,p)=>s+Number(p.total||0),0);
+  const faltam = lista.filter(p=>p.status!=="entregue").length;
+  if(!confirm(`Fechar a conta da Mesa ${mesa}?\nTotal: ${brl(total)}${faltam?`\n\nAtenção: ${faltam} pedido(s) ainda não marcado(s) como entregue.`:""}`)) return;
+  const ids = lista.map(p=>p.id), ate = Date.now()+45000;
+  ids.forEach(id=>fechandoAte.set(id, ate)); desenharContas();
+  try{
+    const r = await api({acao:"fechar", mesa:String(mesa), ids:ids.join(",")});
+    if(!r.ok || r.fechadas===undefined) throw new Error(r.erro||"script antigo");
+  }catch(e){ ids.forEach(id=>fechandoAte.delete(id)); desenharContas(); alert("Não consegui fechar a conta. Confira a internet e tente de novo."); }
+}
+
+/* Lançar itens pelo painel */
+async function carregarCardapio(){
+  if(CARD) return;
+  const html = await (await fetch("index.html",{cache:"no-store"})).text();
+  const pega = nome => { const i = html.indexOf("const "+nome+" = "); if(i<0) throw 0; const ini = html.indexOf("[", i); let n=0, j=ini;
+    for(; j<html.length; j++){ if(html[j]==="[") n++; else if(html[j]==="]" && --n===0) break; } return Function('"use strict";return ('+html.slice(ini,j+1)+')')(); };
+  CARD = pega("CARDAPIO"); ADIC = pega("ADICIONAIS");
+}
+async function abrirLancar(mesa){
+  lanc = {mesa, itens:[], aberto:null};
+  $("lancMesas").innerHTML = Array.from({length:QTD_MESAS},(_,i)=>`<button data-m="${i+1}" onclick="escolheMesa(${i+1})">Mesa ${i+1}</button>`).join("");
+  escolheMesa(mesa); desenharLancamento(); $("mLancar").classList.add("aberto");
+  try{ await carregarCardapio(); desenharCardapio(); }catch(e){ $("lancCardapio").innerHTML = `<p class="vazio">Não consegui carregar o cardápio. Confira a internet.</p>`; }
+}
+function escolheMesa(m){ lanc.mesa=m; document.querySelectorAll("#lancMesas button").forEach(b=>b.classList.toggle("sel", Number(b.dataset.m)===m)); $("lancTitulo").textContent = m ? `Lançar na Mesa ${m}` : "Escolha a mesa"; desenharLancamento(); }
+function fecharLancar(){ $("mLancar").classList.remove("aberto"); }
+function desenharCardapio(){
+  $("lancCardapio").innerHTML = CARD.map((c,ci)=>`<div class="cat-t">${esc(c.cat)}</div>`+c.itens.map((it,ii)=>{
+    const k=ci+"-"+ii, lanche=c.cat==="Lanches";
+    return `<div class="prod"><span>${esc(it.nome)}${it.desc&&!lanche?` <small>${esc(it.desc)}</small>`:""}<br><small>${brl(it.preco)}</small></span><button onclick="${lanche?`abreOpcoes('${k}')`:`addLanc('${k}')`}">+</button></div>
+      ${lanc.aberto===k?`<div class="opc"><b>Adicionais</b><br>${ADIC.map((a,ai)=>`<label><input type="checkbox" value="${ai}"> ${esc(a.nome)} (+${brl(a.preco)})</label>`).join("")}
+        <input type="text" id="opcObs" placeholder="Observação (ex.: sem cebola)"><button class="ok" onclick="addLanc('${k}',true)">Adicionar</button></div>`:""}`;
+  }).join("")).join("");
+}
+function abreOpcoes(k){ lanc.aberto = lanc.aberto===k ? null : k; desenharCardapio(); }
+function addLanc(k, comOpc){
+  const [ci,ii]=k.split("-").map(Number), it=CARD[ci].itens[ii];
+  let adicionais=[], obs="";
+  if(comOpc){ adicionais=[...document.querySelectorAll(".opc input:checked")].map(x=>ADIC[x.value]); obs=($("opcObs").value||"").trim(); lanc.aberto=null; desenharCardapio(); }
+  const unit = it.preco + adicionais.reduce((s,a)=>s+a.preco,0);
+  const igual = lanc.itens.find(x=>x.nome===it.nome && !x.adicionais.length && !adicionais.length && !x.obs && !obs);
+  if(igual) igual.qtd++; else lanc.itens.push({qtd:1, nome:it.nome, adicionais, obs, unit});
+  desenharLancamento();
+}
+function tiraLanc(i){ lanc.itens[i].qtd--; if(lanc.itens[i].qtd<1) lanc.itens.splice(i,1); desenharLancamento(); }
+function desenharLancamento(){
+  $("lancLista").innerHTML = lanc.itens.map((x,i)=>`<div class="lanc-it"><span><b>${x.qtd}x</b> ${esc(x.nome)}${x.adicionais.length?` + ${esc(x.adicionais.map(a=>a.nome).join(", "))}`:""}${x.obs?` (${esc(x.obs)})`:""}</span><span>${brl(x.unit*x.qtd)} <button onclick="tiraLanc(${i})">remover</button></span></div>`).join("");
+  $("lancTotal").textContent = brl(lanc.itens.reduce((s,x)=>s+x.unit*x.qtd,0));
+  $("lancEnviar").disabled = !lanc.mesa || !lanc.itens.length;
+  $("lancEnviar").textContent = !lanc.mesa ? "Escolha a mesa" : "Enviar para a cozinha";
+}
+async function enviarLancamento(){
+  if(!lanc.mesa || !lanc.itens.length) return;
+  const ped = { id:String(Math.floor(100+Math.random()*900)), tipo:"mesa", mesa:lanc.mesa, cliente:"Lançado pelo atendente", endereco:"",
+    itens: lanc.itens.map(x=>({qtd:x.qtd, nome:x.nome, adicionais:x.adicionais.map(a=>a.nome), obs:x.obs})),
+    total: lanc.itens.reduce((s,x)=>s+x.unit*x.qtd,0), pagamento:"" };
+  const b=$("lancEnviar"); b.disabled=true; b.textContent="Enviando...";
+  try{
+    await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(ped)});
+    fecharLancar(); setTimeout(buscar, 800);
+  }catch(e){ alert("Não consegui enviar. Confira a internet e tente de novo."); desenharLancamento(); }
+}
 
 const salvo = ler("rb_pin"); if(salvo) $("pin").value = salvo;
 $("pin").addEventListener("keydown", e=>{ if(e.key==="Enter") entrar(); });
