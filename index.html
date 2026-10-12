@@ -171,7 +171,8 @@
     <p class="fechado-aviso" id="avisoFechado">Estamos fechados agora. Você pode enviar o pedido, e ele será respondido no próximo horário de atendimento: sábados, domingos e feriados, das 18h às 22h.</p>
     <div id="listaCarrinho"></div>
 
-    <div id="blocoMesa" style="display:none"><div class="rotulo">Local</div><div class="mesa-box" id="mesaBox"></div></div>
+    <div id="blocoMesa" style="display:none"><div class="rotulo">Local</div><div class="mesa-box" id="mesaBox"></div>
+      <div class="toggle" style="margin-top:8px"><button id="tAqui" class="sel" onclick="setViagem(false)">Vou comer aqui</button><button id="tViagem" onclick="setViagem(true)">Para viagem</button></div></div>
     <div id="blocoModo">
     <div class="rotulo">Como você quer receber?</div>
     <div class="toggle">
@@ -283,7 +284,7 @@ const ICONES = {
 const brl = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const $ = id => document.getElementById(id);
 let carrinho = [];
-let atual = null, qtd = 1, modo = "entrega";
+let atual = null, qtd = 1, modo = "entrega", paraViagem = false;
 const MESA = (()=>{ const n=parseInt(new URLSearchParams(location.search).get("mesa")); return n>=1 && n<=CONFIG.mesas ? n : null; })();
 
 function montar(){
@@ -394,6 +395,7 @@ function desenhaCarrinho(){
   $("avisoTaxa").style.display = combinar ? "block" : "none";
 }
 function alteraItem(k,d){ carrinho[k].qtd+=d; if(carrinho[k].qtd<1) carrinho.splice(k,1); atualizaBarra(); desenhaCarrinho(); }
+function setViagem(v){ paraViagem=v; $("tAqui").classList.toggle("sel",!v); $("tViagem").classList.toggle("sel",v); }
 function setModo(m){ modo=m; setTimeout(atualizaTroco,0); $("tEntrega").classList.toggle("sel",m==="entrega"); $("tRetirada").classList.toggle("sel",m==="retirada"); $("blocoEndereco").style.display=m==="entrega"?"block":"none"; desenhaCarrinho(); }
 function fechar(id){ $(id).classList.remove("aberto"); }
 
@@ -414,7 +416,7 @@ function codigoPedido(){ return String(Math.floor(100+Math.random()*900)); }
 function montarPedido(nome, rua, bairro, ref){
   return {
     id: codigoPedido(), tipo: modo, mesa: modo==="mesa" ? MESA : "", cliente: nome,
-    endereco: modo==="entrega" ? `${rua}, ${bairro}${ref?` (ref.: ${ref})`:""}` : "",
+    endereco: modo==="entrega" ? `${rua}, ${bairro}${ref?` (ref.: ${ref})`:""}` : (modo==="mesa" && paraViagem ? "PARA VIAGEM" : ""),
     itens: carrinho.map(i=>({ qtd:i.qtd, nome:i.nome, adicionais:i.adicionais.map(a=>a.nome), obs:i.obs })),
     total: subtotal() + (modo==="entrega" && CONFIG.taxaEntrega ? CONFIG.taxaEntrega : 0),
     pagamento: textoPagamento()
@@ -431,7 +433,7 @@ function mensagemWhats(ped){
   t += `\nSubtotal: ${brl(subtotal())}\n`;
   if(modo==="entrega") t += `Taxa de entrega: ${CONFIG.taxaEntrega==null?"a combinar":brl(CONFIG.taxaEntrega)}\n`;
   t += modo==="entrega" && CONFIG.taxaEntrega==null ? `*Total dos produtos: ${brl(ped.total)}* (+ taxa de entrega a combinar)\n\n*Cliente:* ${ped.cliente}\n` : `*Total: ${brl(ped.total)}*\n\n*Cliente:* ${ped.cliente}\n`;
-  t += modo==="mesa" ? `*Consumo no local: Mesa ${MESA}*\n` : modo==="entrega" ? `*Entrega:* ${ped.endereco}\n` : `*Retirada no local*\n`;
+  t += modo==="mesa" ? (paraViagem ? `*Mesa ${MESA}: PARA VIAGEM*\n` : `*Consumo no local: Mesa ${MESA}*\n`) : modo==="entrega" ? `*Entrega:* ${ped.endereco}\n` : `*Retirada no local*\n`;
   t += `*Pagamento:* ${ped.pagamento}`;
   return `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(t)}`;
 }
@@ -460,7 +462,7 @@ async function enviarPedido(){
       await mandaParaPainel(ped);
       carrinho=[]; atualizaBarra(); fechar("mCarrinho");
       $("okCodigo").textContent = `#${ped.id}`; $("okMesa").textContent = `Mesa ${MESA}`;
-      try{ sessionStorage.setItem("rb_nome", nome); }catch(e){}
+      try{ sessionStorage.setItem("rb_nome", nome); }catch(e){} setViagem(false);
       $("okConta").style.display="none"; $("mOk").classList.add("aberto"); mostraConta();
     }catch(e){ location.href = zap; }   // sem internet para o painel: cai no WhatsApp
     finally{ btn.disabled=false; $("btnTxt").textContent=txt; }

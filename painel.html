@@ -128,6 +128,10 @@
   .b-taxa{width:100%;margin-top:8px;background:transparent;border:1.5px dashed #ffd27a!important;color:#ffd27a;font-weight:700;font-size:14px;padding:9px;border-radius:10px}
   .taxa-ok{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:12.5px;color:var(--claro)}
   .taxa-ok button{background:none;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:12px}
+  .viagem{display:inline-block;margin-top:6px;background:#ffd27a;color:#061433;font-weight:800;font-size:13px;letter-spacing:.5px;padding:4px 10px;border-radius:8px}
+  .viagem-p{color:#ffd27a;font-weight:700}
+  #lancNomeBox{display:none;margin:4px 0 8px}
+  #lancNomeBox input{width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:#fff;font-family:inherit;font-size:14px}
   #aviso-config{background:var(--entrega);color:#061433;padding:10px 16px;font-weight:600;font-size:14px;display:none}
 </style>
 </head>
@@ -152,7 +156,7 @@
       <button data-f="entrega">Entrega</button>
       <button data-f="retirada">Retirada</button>
     </div>
-    <div class="vista"><button id="vbFila" class="sel" onclick="vista('fila')">Fila</button><button id="vbContas" onclick="vista('contas')">Contas abertas (0)</button></div>
+    <div class="vista"><button onclick="abrirLancar('balcao')">+ Balcão</button><button id="vbFila" class="sel" onclick="vista('fila')">Fila</button><button id="vbContas" onclick="vista('contas')">Contas abertas (0)</button></div>
     <div class="topo-dir">
       <span id="conexao" title="Conexão"></span>
       <button id="som" onclick="alternaSom()">🔔 Som ligado</button>
@@ -160,7 +164,7 @@
     </div>
   </header>
   <section id="vContas">
-    <div class="contas-topo"><h2>Contas das mesas</h2><button class="btn-lancar" onclick="abrirLancar(null)">+ Lançar pedido numa mesa</button></div>
+    <div class="contas-topo"><h2>Contas das mesas</h2><button class="btn-lancar" onclick="abrirLancar(null)">+ Lançar pedido (mesa ou balcão)</button></div>
     <div class="grade-contas" id="gradeContas"></div>
     <details style="margin:16px 0 0"><summary id="sum-fechadas">Contas fechadas (0)</summary><div id="listaFechadas"></div></details>
   </section>
@@ -176,6 +180,7 @@
   <div class="modal">
     <h3><span id="lancTitulo">Lançar na mesa</span><button onclick="fecharLancar()">✕</button></h3>
     <div class="sel-mesa" id="lancMesas"></div>
+    <div id="lancNomeBox"><input id="lancNome" type="text" placeholder="Nome do cliente (opcional)" maxlength="60"></div>
     <div id="lancCardapio"><p class="vazio">Carregando cardápio...</p></div>
     <div class="lanc"><div id="lancLista"></div>
       <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:4px"><span>Total</span><span id="lancTotal">R$ 0,00</span></div>
@@ -238,7 +243,8 @@ function receber(r){
 
 function minutos(p){ return Math.floor((Date.now()-p.criado)/60000); }
 function hora(t){ return new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }
-function rotuloTipo(p){ return p.tipo==="mesa" ? `Mesa ${p.mesa}` : p.tipo==="entrega" ? "Entrega" : "Retirada"; }
+function ehViagem(p){ return /PARA VIAGEM/i.test(p.endereco||""); }
+function rotuloTipo(p){ return p.tipo==="mesa" ? `Mesa ${p.mesa}` : p.tipo==="entrega" ? "Entrega" : ehViagem(p) ? "Balcão" : "Retirada"; }
 
 const PROXIMO = {novo:"preparando", preparando:"pronto", pronto:"entregue"};
 const ANTERIOR = {preparando:"novo", pronto:"preparando"};
@@ -253,6 +259,7 @@ function cartao(p){
   return `<div class="card ${p.tipo}${pisca}">
     <div class="c-topo"><span class="codigo">#${esc(p.id)}</span><span class="tipo">${rotuloTipo(p)}</span></div>
     <div class="tempo ${cls}">${hora(p.criado)} · há ${m} min</div>
+    ${ehViagem(p)?`<div class="viagem">PARA VIAGEM · EMBALAR</div>`:""}
     <div class="cliente">${esc(p.cliente)}</div>
     ${p.tipo==="entrega"?`<div class="end">📍 ${esc(p.endereco)}</div>`:""}
     <ul class="itens">${itens}</ul>
@@ -349,7 +356,7 @@ function desenharContas(){
   if(vistaAtual!=="contas") return;
   $("gradeContas").innerHTML = abertas.length ? abertas.map(([mesa,lista])=>{
     const total = lista.reduce((s,p)=>s+Number(p.total||0),0);
-    const peds = lista.map(p=>`<div class="conta-ped"><div class="cab"><span>#${esc(p.id)} · ${hora(p.criado)}${p.cliente?` · ${esc(p.cliente)}`:""}</span><span class="st">${ROT_ST[p.status]||""}</span></div>
+    const peds = lista.map(p=>`<div class="conta-ped"><div class="cab"><span>#${esc(p.id)} · ${hora(p.criado)}${p.cliente?` · ${esc(p.cliente)}`:""}${ehViagem(p)?` · <span class="viagem-p">para viagem</span>`:""}</span><span class="st">${ROT_ST[p.status]||""}</span></div>
       ${(p.itens||[]).map(i=>`<div><b>${i.qtd}x</b> ${esc(i.nome)}${i.adicionais&&i.adicionais.length?` <small style="color:var(--claro)">+ ${esc(i.adicionais.join(", "))}</small>`:""}</div>`).join("")}
       <div style="text-align:right;color:var(--claro);font-size:13px">${brl(p.total)}</div></div>`).join("");
     return `<div class="conta"><div class="conta-topo"><b>Mesa ${esc(mesa)}</b><span>aberta às ${hora(lista[0].criado)}</span></div>${peds}
@@ -385,11 +392,11 @@ async function carregarCardapio(){
 }
 async function abrirLancar(mesa){
   lanc = {mesa, itens:[], aberto:null};
-  $("lancMesas").innerHTML = Array.from({length:QTD_MESAS},(_,i)=>`<button data-m="${i+1}" onclick="escolheMesa(${i+1})">Mesa ${i+1}</button>`).join("");
+  $("lancMesas").innerHTML = Array.from({length:QTD_MESAS},(_,i)=>`<button data-m="${i+1}" onclick="escolheMesa(${i+1})">Mesa ${i+1}</button>`).join("") + `<button data-m="balcao" onclick="escolheMesa('balcao')">Balcão (para viagem)</button>`; $("lancNome").value="";
   escolheMesa(mesa); desenharLancamento(); $("mLancar").classList.add("aberto");
   try{ await carregarCardapio(); desenharCardapio(); }catch(e){ $("lancCardapio").innerHTML = `<p class="vazio">Não consegui carregar o cardápio. Confira a internet.</p>`; }
 }
-function escolheMesa(m){ lanc.mesa=m; document.querySelectorAll("#lancMesas button").forEach(b=>b.classList.toggle("sel", Number(b.dataset.m)===m)); $("lancTitulo").textContent = m ? `Lançar na Mesa ${m}` : "Escolha a mesa"; desenharLancamento(); }
+function escolheMesa(m){ lanc.mesa=m; document.querySelectorAll("#lancMesas button").forEach(b=>b.classList.toggle("sel", b.dataset.m===String(m))); $("lancTitulo").textContent = m==="balcao" ? "Pedido no balcão (para viagem)" : m ? `Lançar na Mesa ${m}` : "Escolha a mesa ou o balcão"; $("lancNomeBox").style.display = m==="balcao" ? "block" : "none"; desenharLancamento(); }
 function fecharLancar(){ $("mLancar").classList.remove("aberto"); }
 function desenharCardapio(){
   $("lancCardapio").innerHTML = CARD.map((c,ci)=>`<div class="cat-t">${esc(c.cat)}</div>`+c.itens.map((it,ii)=>{
@@ -414,11 +421,13 @@ function desenharLancamento(){
   $("lancLista").innerHTML = lanc.itens.map((x,i)=>`<div class="lanc-it"><span><b>${x.qtd}x</b> ${esc(x.nome)}${x.adicionais.length?` + ${esc(x.adicionais.map(a=>a.nome).join(", "))}`:""}${x.obs?` (${esc(x.obs)})`:""}</span><span>${brl(x.unit*x.qtd)} <button onclick="tiraLanc(${i})">remover</button></span></div>`).join("");
   $("lancTotal").textContent = brl(lanc.itens.reduce((s,x)=>s+x.unit*x.qtd,0));
   $("lancEnviar").disabled = !lanc.mesa || !lanc.itens.length;
-  $("lancEnviar").textContent = !lanc.mesa ? "Escolha a mesa" : "Enviar para a cozinha";
+  $("lancEnviar").textContent = !lanc.mesa ? "Escolha a mesa ou o balcão" : "Enviar para a cozinha";
 }
 async function enviarLancamento(){
   if(!lanc.mesa || !lanc.itens.length) return;
-  const ped = { id:String(Math.floor(100+Math.random()*900)), tipo:"mesa", mesa:lanc.mesa, cliente:"Lançado pelo atendente", endereco:"",
+  const balcao = lanc.mesa==="balcao";
+  const ped = { id:String(Math.floor(100+Math.random()*900)), tipo: balcao?"retirada":"mesa", mesa: balcao?"":lanc.mesa,
+    cliente: balcao ? (($("lancNome").value||"").trim() || "Balcão") : "Lançado pelo atendente", endereco: balcao ? "PARA VIAGEM" : "",
     itens: lanc.itens.map(x=>({qtd:x.qtd, nome:x.nome, adicionais:x.adicionais.map(a=>a.nome), obs:x.obs})),
     total: lanc.itens.reduce((s,x)=>s+x.unit*x.qtd,0), pagamento:"" };
   const b=$("lancEnviar"); b.disabled=true; b.textContent="Enviando...";
